@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
 <meta name="description" content="メジャー／マイナー全24キーのダイアトニックコード・度数・構成音を覚えるドリルと全一覧">
 <title>ダイアトニック・ドリル</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -12,16 +13,12 @@
 :root{
   --paper:#E9EDF1; --card:#F8FAFC; --ink:#151A22; --muted:#5A6573; --line:#CBD2DB;
   --root:#D3242C; --dot:#1A1E25; --dot-fg:#FFFFFF; --ok:#1E7A4E; --ng:#B3384A; --chip:#DEE3E9;
-  --dot-ring:transparent; --sel-bg:#151A22; --sel-fg:#F8FAFC; --hl:12%; --heatk:1;
+  --dot-ring:transparent; --sel-bg:#151A22; --sel-fg:#F8FAFC; --hl:12%; --heatk:1; color-scheme:light;
   --f-display:"Dela Gothic One","Hiragino Sans","Noto Sans JP",sans-serif;
   --f-body:"IBM Plex Sans JP","Hiragino Sans","Noto Sans JP",system-ui,sans-serif;
   --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
 }
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --paper:#0F1318; --card:#1B222C; --ink:#F2F5F8; --muted:#B7C0CC; --line:#3A4452;
-  --root:#FF4F58; --dot:#05070A; --dot-ring:#8793A3; --dot-fg:#FFFFFF; --ok:#4CD08E; --ng:#FF7F92; --chip:#2A3340;
-  --sel-bg:#F2F5F8; --sel-fg:#0F1318; --hl:22%; --heatk:1.8; color-scheme:dark}}
-:root[data-theme="dark"]{
+:root.dark{
   --paper:#0F1318; --card:#1B222C; --ink:#F2F5F8; --muted:#B7C0CC; --line:#3A4452;
   --root:#FF4F58; --dot:#05070A; --dot-ring:#8793A3; --dot-fg:#FFFFFF; --ok:#4CD08E; --ng:#FF7F92; --chip:#2A3340;
   --sel-bg:#F2F5F8; --sel-fg:#0F1318; --hl:22%; --heatk:1.8; color-scheme:dark}
@@ -98,10 +95,12 @@ table{border-collapse:collapse;width:100%;font-family:var(--f-mono);font-size:.8
 th,td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
 th{font-family:var(--f-body);font-weight:500;font-size:.72rem;color:var(--muted);letter-spacing:.06em}
 td.rt{color:var(--root);font-weight:600}
-.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line)}
-.tabs button{font:inherit;font-weight:700;background:none;border:0;border-bottom:3px solid transparent;color:var(--muted);padding:6px 14px;cursor:pointer;margin-bottom:-1px}
-.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--root)}
-.tabs button:focus-visible,.lt th button:focus-visible,.lt td button:focus-visible{outline:2px solid var(--root);outline-offset:1px}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);align-items:center}
+.themebtn{margin-left:auto;font:inherit;font-size:.75rem;background:none;border:1px solid var(--line);color:var(--muted);border-radius:99px;padding:3px 12px;cursor:pointer;margin-bottom:6px}
+.themebtn:focus-visible{outline:2px solid var(--root);outline-offset:2px}
+.tabs [role="tab"]{font:inherit;font-weight:700;background:none;border:0;border-bottom:3px solid transparent;color:var(--muted);padding:6px 14px;cursor:pointer;margin-bottom:-1px}
+.tabs [role="tab"][aria-selected="true"]{color:var(--ink);border-bottom-color:var(--root)}
+.tabs [role="tab"]:focus-visible,.lt th button:focus-visible,.lt td button:focus-visible{outline:2px solid var(--root);outline-offset:1px}
 .list{display:flex;flex-direction:column;gap:12px}
 .ltwrap{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:12px}
 .lt{border-collapse:collapse;width:100%;min-width:620px;font-family:var(--f-mono);font-size:1.12rem}
@@ -150,6 +149,7 @@ td.rt{color:var(--root);font-weight:600}
   <div class="tabs" role="tablist">
     <button id="tab-drill" role="tab" aria-selected="true" data-view="drill">ドリル</button>
     <button id="tab-list" role="tab" aria-selected="false" data-view="list">全一覧</button>
+    <button class="themebtn" id="themeBtn" type="button"></button>
   </div>
 
   <div class="list" id="listView" hidden>
@@ -235,6 +235,8 @@ const save=()=>{try{localStorage.setItem(SK,JSON.stringify(store))}catch(e){}};
 let streak=0,cur=null,lastSig="";
 const S=()=>store.settings;
 const off=new Set(store.off);
+function applyTheme(){const d=store.dark===true;document.documentElement.classList.toggle("dark",d);themeBtn.textContent=d?"白ベースに戻す":"ダーク表示";themeBtn.setAttribute("aria-pressed",d)}
+themeBtn.onclick=()=>{store.dark=!(store.dark===true);save();applyTheme()};applyTheme();
 
 /* ---- question ---- */
 function pool(){const types=S().scale==="both"?["major","minor"]:[S().scale];
@@ -373,8 +375,8 @@ lt.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
 function syncListSeg(){document.querySelectorAll("[data-lset]").forEach(g=>g.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",L()[g.dataset.lset]===b.dataset.v)))}
 document.querySelectorAll("[data-lset]").forEach(g=>g.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
   const k=g.dataset.lset;L()[k]=b.dataset.v;if(L().hide==="hide"&&(k==="hide"||k==="scale"||k==="order"||k==="show"))hideAll();save();renderList()}));
-document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>{view=b.dataset.view;
-  document.querySelectorAll(".tabs button").forEach(x=>x.setAttribute("aria-selected",x===b));
+document.querySelectorAll('.tabs [role=tab]').forEach(b=>b.onclick=()=>{view=b.dataset.view;
+  document.querySelectorAll('.tabs [role=tab]').forEach(x=>x.setAttribute("aria-selected",x===b));
   listView.hidden=view!=="list";drillView.hidden=view!=="drill";if(view==="list"){if(L().hide==="hide"&&!hidden.size)hideAll();renderList()}});
 
 syncSeg();render();renderStats();renderKeys();
