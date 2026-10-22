@@ -34,10 +34,10 @@ h1 span{color:var(--root)}
 .stats b{display:block;font-size:1.05rem;color:var(--ink);font-weight:600}
 
 .settings{display:flex;flex-direction:column;gap:8px}
-.seg{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.seg>label{font-size:.72rem;letter-spacing:.08em;color:var(--muted);width:4.5em;flex:none}
-.seg .opts{display:flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--card)}
-.seg button{font:inherit;font-size:.82rem;border:0;background:transparent;color:var(--ink);padding:5px 11px;cursor:pointer;border-right:1px solid var(--line)}
+.seg{display:flex;align-items:center;gap:10px}
+.seg>label{font-size:.72rem;letter-spacing:.08em;color:var(--muted);width:4.5em;flex:none;white-space:nowrap}
+.seg .opts{display:flex;flex:1;min-width:0;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--card)}
+.seg button{flex:1 1 auto;min-width:0;font:inherit;font-size:.82rem;line-height:1.3;border:0;background:transparent;color:var(--ink);padding:6px 4px;cursor:pointer;border-right:1px solid var(--line)}
 .seg button:last-child{border-right:0}
 .seg button[aria-pressed="true"]{background:var(--sel-bg);color:var(--sel-fg);font-weight:700}
 
@@ -129,7 +129,8 @@ td.rt{color:var(--root);font-weight:600}
 .lt td.hid button span{display:none}
 .lt tr.cur th button{color:var(--root)}
 .lt td .sub{display:block;font-size:.62rem;color:var(--muted)}
-@media (max-width:420px){.keyname{font-size:2.1rem}.choices.seven{grid-template-columns:repeat(3,minmax(0,1fr))}.krow{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media (max-width:420px){.seg{gap:6px}.seg>label{width:3.5rem;letter-spacing:.02em}.seg button{font-size:.78rem;padding:6px 2px}.keyname{font-size:2.1rem}.choices.seven{grid-template-columns:repeat(3,minmax(0,1fr))}.krow{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media (max-width:380px){.seg .opts[data-set="mode"]{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line)}.seg .opts[data-set="mode"] button{border-right:0;background:var(--card)}.seg .opts[data-set="mode"] button[aria-pressed="true"]{background:var(--sel-bg)}}
 @media (prefers-reduced-motion:no-preference){.reveal{animation:in .18s ease-out}@keyframes in{from{opacity:.4;transform:translateY(4px)}to{opacity:1;transform:none}}}
 </style>
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}[hidden]{display:none!important}body{margin:0}</style>
