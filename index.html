@@ -129,6 +129,53 @@ td.rt{color:var(--root);font-weight:600}
 .lt td.hid button span{display:none}
 .lt tr.cur th button{color:var(--root)}
 .lt td .sub{display:block;font-size:.62rem;color:var(--muted)}
+.help{display:flex;flex-direction:column;gap:14px}
+.hkeys{display:flex;flex-direction:column;gap:6px;position:sticky;top:env(safe-area-inset-top,0px);background:var(--paper);padding-block:8px;z-index:3}
+.hk-label{font-size:.72rem;letter-spacing:.08em;color:var(--muted)}
+.hk-list{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:4px}
+.hk-list button{font-family:var(--f-mono);font-weight:600;font-size:.85rem;padding:6px 0;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--ink);cursor:pointer;min-width:0}
+.hk-list button[aria-pressed="true"]{background:var(--root);border-color:var(--root);color:#fff}
+.hk-list button:focus-visible{outline:2px solid var(--root);outline-offset:2px}
+.hcard{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.hcard h3{margin:0;font-size:1rem;display:flex;align-items:center;gap:8px;text-wrap:balance}
+.hn{width:22px;height:22px;border-radius:50%;background:var(--dot);box-shadow:inset 0 0 0 1.5px var(--dot-ring);color:var(--dot-fg);display:grid;place-items:center;font-family:var(--f-mono);font-size:.75rem;flex:none}
+.pat{min-width:0;table-layout:fixed}
+.pat th,.pat td{padding:6px 2px}
+.pat thead th:first-child,.pat tbody th{width:3.6em}
+#hStrip{min-width:0;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px}
+#hStrip .dot{width:26px;height:26px}
+#hStrip .cn{font-size:.66rem}
+.pat th,.pat td{text-align:center;font-family:var(--f-mono)}
+.pat thead th{font-size:.95rem;color:var(--ink);font-weight:600}
+.pat tbody th{font-family:var(--f-body);text-align:left}
+.pat td{font-weight:600;font-size:.88rem;white-space:nowrap}
+.pat td.m{color:var(--muted)} .pat td.d{color:var(--ng)} .pat tbody tr:last-child td.d{font-size:.68rem}
+.say{margin:0;font-weight:500}
+.note{margin:0;color:var(--muted);font-size:.88rem}
+.note b{color:var(--ink)}
+.order{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ol{font-size:.75rem;color:var(--muted);width:3.5rem;flex:none}
+.seq{display:flex;gap:4px;flex-wrap:wrap}
+.seq span{font-family:var(--f-mono);font-weight:600;min-width:30px;text-align:center;padding:3px 6px;border-radius:6px;background:var(--chip)}
+.seq span.on{background:var(--ink);color:var(--card)}
+.seq i{font-style:normal;color:var(--muted);align-self:center;font-size:.8rem}
+.rules{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:4px;font-size:.9rem}
+.cof-wrap{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.cof-wrap svg{width:100%;max-width:320px;flex:none}
+.cof-wrap .rules{flex:1;min-width:200px}
+.fb-scroll{overflow-x:auto}
+.fb-scroll svg{width:100%;display:block}
+.pos{font-family:var(--f-mono)} .pos th{font-family:var(--f-mono);color:var(--root);width:3.5em}
+.steps{margin:0;padding-left:1.4em;display:flex;flex-direction:column;gap:4px;font-size:.9rem}
+.prog{display:flex;flex-direction:column;gap:6px}
+.prow{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;font-family:var(--f-mono)}
+.prow .pl{font-family:var(--f-body);font-size:.75rem;color:var(--muted);width:6.5em;flex:none}
+.prow .pd{color:var(--muted)}
+.prow .pc2{font-weight:600}
+svg .t-ink{fill:var(--ink)} svg .t-root{fill:var(--root)} svg .t-muted{fill:var(--muted)} svg .t-white{fill:#fff}
+svg .s-line{stroke:var(--line)} svg .s-ink{stroke:var(--ink)} svg .f-root{fill:var(--root)} svg .f-dot{fill:var(--dot);stroke:var(--dot-ring);stroke-width:1.5}
+svg .f-hl{fill:color-mix(in oklab,var(--root) var(--hl),var(--card))} svg .f-card{fill:var(--card)} svg .f-mark{fill:var(--line)}
+@media (max-width:420px){.hk-list{grid-template-columns:repeat(6,minmax(0,1fr))}}
 @media (max-width:420px){.seg{gap:6px}.seg>label{width:3.5rem;letter-spacing:.02em}.seg button{font-size:.78rem;padding:6px 2px}.keyname{font-size:2.1rem}.choices.seven{grid-template-columns:repeat(3,minmax(0,1fr))}.krow{grid-template-columns:repeat(4,minmax(0,1fr))}}
 @media (max-width:380px){.seg .opts[data-set="mode"]{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line)}.seg .opts[data-set="mode"] button{border-right:0;background:var(--card)}.seg .opts[data-set="mode"] button[aria-pressed="true"]{background:var(--sel-bg)}}
 @media (prefers-reduced-motion:no-preference){.reveal{animation:in .18s ease-out}@keyframes in{from{opacity:.4;transform:translateY(4px)}to{opacity:1;transform:none}}}
@@ -150,6 +197,7 @@ td.rt{color:var(--root);font-weight:600}
   <div class="tabs" role="tablist">
     <button id="tab-drill" role="tab" aria-selected="true" data-view="drill">ドリル</button>
     <button id="tab-list" role="tab" aria-selected="false" data-view="list">全一覧</button>
+    <button id="tab-help" role="tab" aria-selected="false" data-view="help">覚え方</button>
     <button class="themebtn" id="themeBtn" type="button"></button>
   </div>
 
@@ -169,6 +217,79 @@ td.rt{color:var(--root);font-weight:600}
     <div class="detail" id="ldetail" aria-live="polite"></div>
     <div class="legend" id="lhint"></div>
     <div class="ltwrap"><table class="lt" id="lt"></table></div>
+  </div>
+
+  <div class="help" id="helpView" hidden>
+    <div class="hkeys">
+      <span class="hk-label">例にするキー</span>
+      <div class="hk-list" id="hkList"></div>
+    </div>
+
+    <section class="hcard">
+      <h3><span class="hn">1</span>コードの並びは全キー共通</h3>
+      <div class="tbl"><table class="pat">
+        <thead><tr><th></th><th>Ⅰ</th><th>Ⅱ</th><th>Ⅲ</th><th>Ⅳ</th><th>Ⅴ</th><th>Ⅵ</th><th>Ⅶ</th></tr></thead>
+        <tbody>
+          <tr><th>三和音</th><td class="M">M</td><td class="m">m</td><td class="m">m</td><td class="M">M</td><td class="M">M</td><td class="m">m</td><td class="d">dim</td></tr>
+          <tr><th>四和音</th><td class="M">M7</td><td class="m">m7</td><td class="m">m7</td><td class="M">M7</td><td class="M">7</td><td class="m">m7</td><td class="d">m7(♭5)</td></tr>
+        </tbody></table></div>
+      <p class="say">「メジャー・マイナー・マイナー・メジャー・メジャー・マイナー・ディム」と唱えて覚える。</p>
+      <p class="note"><b>マイナーキー</b>は平行調メジャーの Ⅵ から読み直すだけ：<span id="hMinor"></span></p>
+      <div class="strip-scroll"><div class="strip" id="hStrip"></div></div>
+    </section>
+
+    <section class="hcard">
+      <h3><span class="hn">2</span>キーの音は調号から出す</h3>
+      <div class="order"><span class="ol">♯の順</span><span class="seq" id="hSharp"></span></div>
+      <div class="order"><span class="ol">♭の順</span><span class="seq" id="hFlat"></span></div>
+      <ul class="rules">
+        <li>♯系のキー名 ＝ <b>最後の♯の半音上</b>（F♯・C♯ まで → D）</li>
+        <li>♭系のキー名 ＝ <b>最後から2番目の♭</b>（B♭・E♭・A♭ まで → E♭）</li>
+        <li>ルートから音名を <b>アルファベット順に1回ずつ</b> 並べ、調号の分だけ ♯/♭ を付ける</li>
+      </ul>
+      <p class="note" id="hSig"></p>
+    </section>
+
+    <section class="hcard">
+      <h3><span class="hn">3</span>五度圏で6つを一度に出す</h3>
+      <div class="cof-wrap"><svg id="hCof" viewBox="-30 -30 380 380" role="img" aria-label="五度圏"></svg>
+        <ul class="rules">
+          <li><b>Ⅰ・Ⅳ・Ⅴ</b> ＝ 外周で隣り合う3つ（Ⅳ は左、Ⅴ は右）</li>
+          <li><b>Ⅵm・Ⅱm・Ⅲm</b> ＝ その内側（平行調のマイナー）</li>
+          <li><b>Ⅶdim</b> ＝ Ⅴ7 からルートを抜いた形</li>
+          <li>時計回り ＝ 5度上・♯が1つ増える</li>
+        </ul></div>
+    </section>
+
+    <section class="hcard">
+      <h3><span class="hn">4</span>ギターでは「形」で覚える</h3>
+      <p class="note">6弦ルートから見た各度数の位置。キーが変わっても形は同じで、全体を平行移動するだけ。</p>
+      <p class="note" id="hFbNote"></p>
+      <div class="fb-scroll"><svg id="hFb" viewBox="0 0 440 210" role="img" aria-label="指板上の度数の位置"></svg></div>
+      <div class="tbl"><table class="pos"><tbody>
+        <tr><th>Ⅰ</th><td>6弦 x</td><th>Ⅴ</th><td>5弦 x+2</td></tr>
+        <tr><th>Ⅱm</th><td>6弦 x+2</td><th>Ⅵm</th><td>5弦 x+4　（6弦 x−3）</td></tr>
+        <tr><th>Ⅲm</th><td>6弦 x+4</td><th>Ⅶdim</th><td>5弦 x+6　（6弦 x−1）</td></tr>
+        <tr><th>Ⅳ</th><td>5弦 x</td><th></th><td></td></tr>
+      </tbody></table></div>
+    </section>
+
+    <section class="hcard">
+      <h3><span class="hn">5</span>練習の順番</h3>
+      <ol class="steps">
+        <li><b>型</b>：1 の並びを三和音・四和音で言えるように（1日）</li>
+        <li><b>よく使うキー</b>：E・A・D・G・C から（ドリルのキー別チップで5キーに絞る）</li>
+        <li><b>列ごと</b>：全一覧の「隠してめくる」で度数の見出しをタップし、「Ⅴ だけ全キー」のように確認</li>
+        <li><b>♭系</b>：F・B♭・E♭ などを後から追加</li>
+        <li><b>マイナー</b>：平行調として確認するだけ</li>
+      </ol>
+    </section>
+
+    <section class="hcard">
+      <h3><span class="hn">6</span>曲で使う</h3>
+      <p class="note">弾いている曲を度数で読み、別のキーに移して弾く。1曲でドリル数十問分の練習になる。</p>
+      <div class="prog" id="hProg"></div>
+    </section>
   </div>
 
   <div id="drillView" style="display:contents">
@@ -378,7 +499,72 @@ document.querySelectorAll("[data-lset]").forEach(g=>g.addEventListener("click",e
   const k=g.dataset.lset;L()[k]=b.dataset.v;if(L().hide==="hide"&&(k==="hide"||k==="scale"||k==="order"||k==="show"))hideAll();save();renderList()}));
 document.querySelectorAll('.tabs [role=tab]').forEach(b=>b.onclick=()=>{view=b.dataset.view;
   document.querySelectorAll('.tabs [role=tab]').forEach(x=>x.setAttribute("aria-selected",x===b));
-  listView.hidden=view!=="list";drillView.hidden=view!=="drill";if(view==="list"){if(L().hide==="hide"&&!hidden.size)hideAll();renderList()}});
+  listView.hidden=view!=="list";drillView.hidden=view!=="drill";helpView.hidden=view!=="help";if(view==="help")renderHelp();if(view==="list"){if(L().hide==="hide"&&!hidden.size)hideAll();renderList()}});
+
+/* ---- help / cheat sheet ---- */
+let hKey="C";
+const SHARPS=["F","C","G","D","A","E","B"],FLATS=["B","E","A","D","G","C","F"];
+const SV=(t,a,c="")=>`<${t} ${Object.entries(a).map(([k,v])=>`${k}="${v}"`).join(" ")}>${c}</${t}>`;
+function renderHelp(){
+  hkList.innerHTML=FIFTHS.major.map(r=>`<button id="hk-${r.replace("#","s")}" data-k="${r}" aria-pressed="${r===hKey}">${fmt(r)}</button>`).join("");
+  const notes=spell(hKey,IV.major),t3=chordsOf("major",hKey,"triad"),t7=chordsOf("major",hKey,"seventh");
+  hStrip.innerHTML=t3.map((c,i)=>`<div class="col"><div class="dot ${i===0?"r":""}">${NDEG.major[i]}</div><div class="nn">${fmt(notes[i])}</div><div class="cn">${c.name}<br>${t7[i].name}</div><div class="dg">${c.deg}</div></div>`).join("");
+  const rel=notes[5],mc=chordsOf("minor",rel,"triad");
+  hMinor.innerHTML=` <b>${fmt(rel)}m キー</b> ＝ ${mc.map(c=>c.name).join("・")}`;
+  const sigN=notes.reduce((a,n)=>a+parse(n).a,0);
+  hSharp.innerHTML=SHARPS.map((n,i)=>`<span class="${sigN>0&&i<sigN?"on":""}">${n}</span>`).join("");
+  hFlat.innerHTML=FLATS.map((n,i)=>`<span class="${sigN<0&&i<-sigN?"on":""}">${n}</span>`).join("");
+  hSig.innerHTML=sigN===0?`<b>${fmt(hKey)} キー</b>は調号なし：${notes.map(fmt).join(" ")}`:
+    `<b>${fmt(hKey)} キー</b>は ${sigN>0?"♯":"♭"}×${Math.abs(sigN)}：${notes.map(fmt).join(" ")}`;
+  drawCof();drawFb();{const x=(pc(hKey)-4+12)%12;hFbNote.innerHTML=`<b>${fmt(hKey)} キー</b>は x = ${x===0?"0（開放）":x} フレット：${t3.map(c=>c.deg+" "+c.name).join("　")}`;}
+  const P=[["王道進行",[3,4,2,5],"seventh"],["カノン進行",[0,4,5,2,3,0,3,4],"triad"],["Ⅱ-Ⅴ-Ⅰ",[1,4,0],"seventh"],["小室進行",[5,3,4,0],"triad"]];
+  hProg.innerHTML=P.map(([n,seq,k])=>{const ch=chordsOf("major",hKey,k);
+    return `<div class="prow"><span class="pl">${n}</span><span class="pd">${seq.map(i=>ch[i].deg).join(" - ")}</span><span class="pc2">${seq.map(i=>ch[i].name).join(" - ")}</span></div>`}).join("");
+}
+function drawCof(){
+  const k=FIFTHS.major.indexOf(hKey),C=160,ang=i=>(i*30-90)*Math.PI/180,pt=(i,r)=>[C+r*Math.cos(ang(i)),C+r*Math.sin(ang(i))];
+  const arc=(a0,a1,r0,r1)=>{const p=(a,r)=>[C+r*Math.cos(a),C+r*Math.sin(a)];const[a,b]=p(a0,r1),[c,d]=p(a1,r1),[e,f]=p(a1,r0),[g,h]=p(a0,r0);
+    return `M${a} ${b}A${r1} ${r1} 0 0 1 ${c} ${d}L${e} ${f}A${r0} ${r0} 0 0 0 ${g} ${h}Z`};
+  const hlA0=((k-1.5)*30-90)*Math.PI/180,hlA1=((k+1.5)*30-90)*Math.PI/180;
+  let s=SV("circle",{cx:C,cy:C,r:156,class:"f-card s-line","stroke-width":1});
+  s+=SV("path",{d:arc(hlA0,hlA1,72,156),class:"f-hl"});
+  s+=SV("circle",{cx:C,cy:C,r:113,fill:"none",class:"s-line"})+SV("circle",{cx:C,cy:C,r:72,fill:"none",class:"s-line"});
+  const majDeg={[-1]:"Ⅳ",0:"Ⅰ",1:"Ⅴ"},minDeg={[-1]:"Ⅱm",0:"Ⅵm",1:"Ⅲm"};
+  FIFTHS.major.forEach((r,i)=>{
+    let d=((i-k+12)%12);if(d>6)d-=12;const on=Math.abs(d)<=1;
+    const[x,y]=pt(i,135),[mx,my]=pt(i,93);
+    if(on){s+=SV("circle",{cx:x,cy:y,r:18,class:d===0?"f-root":"f-dot"})}
+    s+=SV("text",{x,y:y+5,"text-anchor":"middle","font-size":on?15:14,"font-weight":on?700:500,"font-family":"IBM Plex Mono,monospace",class:on?"t-white":"t-ink"},fmt(r));
+    const mr=FIFTHS.minor[i];
+    if(on)s+=SV("circle",{cx:mx,cy:my,r:17,class:"f-dot"});
+    s+=SV("text",{x:mx,y:my+4,"text-anchor":"middle","font-size":on?12:11,"font-weight":on?700:500,"font-family":"IBM Plex Mono,monospace",class:on?"t-white":"t-muted"},fmt(mr)+"m");
+    if(on){const[ox,oy]=pt(i,173),[ix,iy]=pt(i,56);
+      s+=SV("text",{x:ox,y:oy+4,"text-anchor":"middle","font-size":14,"font-weight":700,class:d===0?"t-root":"t-ink"},majDeg[d]);
+      s+=SV("text",{x:ix,y:iy+4,"text-anchor":"middle","font-size":11,"font-weight":700,class:"t-ink"},minDeg[d]);}
+  });
+  hCof.innerHTML=s;
+}
+function drawFb(){
+  const x=(pc(hKey)-4+12)%12,lo=x,n=7,L=26,R=432,T=22,G=30,w=(R-L)/n;
+  const sy=s=>T+(s-1)*G; /* string 1 (high E) on top */
+  let s="";
+  for(let f=lo;f<lo+n;f++){const cx=L+(f-lo+0.5)*w,mid=sy(3.5);
+    if([3,5,7,9,15,17].includes(f))s+=SV("circle",{cx,cy:mid,r:5,class:"f-mark"});
+    if(f===12){s+=SV("circle",{cx,cy:sy(2.5),r:5,class:"f-mark"})+SV("circle",{cx,cy:sy(4.5),r:5,class:"f-mark"})}
+    s+=SV("text",{x:cx,y:sy(6)+30,"text-anchor":"middle","font-size":14,"font-family":"IBM Plex Mono,monospace",class:[3,5,7,9,12,15,17].includes(f)?"t-ink":"t-muted","font-weight":[3,5,7,9,12,15,17].includes(f)?700:400},f);}
+  for(let f=lo;f<=lo+n;f++){const xx=L+(f-lo)*w;const nut=f===1&&lo===0;
+    if(lo===0&&f===0)continue;
+    s+=SV("line",{x1:xx,y1:sy(1),x2:xx,y2:sy(6),class:nut?"s-ink":"s-line","stroke-width":nut?5:1.5});}
+  ["E","B","G","D","A","E"].forEach((nm,i)=>{s+=SV("line",{x1:lo===0?L+w:L,y1:sy(i+1),x2:R,y2:sy(i+1),class:"s-ink","stroke-width":0.6+i*0.3,opacity:.7});
+    s+=SV("text",{x:L-16,y:sy(i+1)+4,"text-anchor":"middle","font-size":13,"font-family":"IBM Plex Mono,monospace",class:"t-muted"},(i+1)+"");});
+  const ch=chordsOf("major",hKey,"triad");
+  const P=[[6,0,0],[6,2,1],[6,4,2],[5,0,3],[5,2,4],[5,4,5],[5,6,6]];
+  P.forEach(([str,off,i])=>{const f=x+off;if(f<lo||f>=lo+n)return;const cx=L+(f-lo+0.5)*w,cy=sy(str);
+    s+=SV("circle",{cx,cy,r:17,class:i===0?"f-root":"f-dot"});
+    s+=SV("text",{x:cx,y:cy+5,"text-anchor":"middle","font-size":ch[i].deg.length>2?11:14,"font-weight":700,class:"t-white"},ch[i].deg);});
+  hFb.innerHTML=s;
+}
+hkList.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;hKey=b.dataset.k;renderHelp()});
 
 syncSeg();render();renderStats();renderKeys();
 </script>
