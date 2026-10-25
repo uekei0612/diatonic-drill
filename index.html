@@ -432,7 +432,8 @@ function renderKeys(){
     const st=acc===null?"":`--heat:color-mix(in oklab,var(--ok) ${acc}%,var(--ng));--hp:${18+Math.min(s.t,10)*2}`;
     const isCur=cur&&cur.key.id===id;
     return `<button class="chip ${isCur?"sel":""}" id="k-${t}-${r.replace("#","s")}" data-id="${id}" aria-pressed="${!off.has(id)}" style="${st}"><span class="kn">${keyLabel(t,r)}</span><span class="pc">${acc===null?"—":acc+"% · "+s.t}</span></button>`}).join("")}</div>`).join("");
-  document.querySelectorAll(".chip").forEach(b=>b.onclick=()=>{const id=b.dataset.id;off.has(id)?off.delete(id):off.add(id);store.off=[...off];save();renderKeys()});
+  document.querySelectorAll(".chip").forEach(b=>b.onclick=()=>{const id=b.dataset.id;off.has(id)?off.delete(id):off.add(id);store.off=[...off];save();
+    if(cur&&!cur.done&&off.has(cur.key.id))render();renderKeys()});
 }
 function renderRef(){
   const k=cur.key,t3=chordsOf(k.t,k.r,"triad"),t7=chordsOf(k.t,k.r,"seventh");
