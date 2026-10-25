@@ -310,6 +310,8 @@ svg .f-hl{fill:color-mix(in oklab,var(--root) var(--hl),var(--card))} svg .f-car
 <script>
 /* ---- DOM ---- */
 const $=id=>document.getElementById(id);
+/* テンプレート文字列で HTML を組むときは、埋め込む値をすべてこれに通す */
+const esc=v=>String(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const themeBtn=$("themeBtn"),listView=$("listView"),drillView=$("drillView"),helpView=$("helpView");
 const sAcc=$("sAcc"),sStreak=$("sStreak"),sBest=$("sBest"),sTotal=$("sTotal");                    /* 成績 */
 const qBox=$("q"),keysBox=$("keys"),kLegend=$("kLegend"),kAll=$("kAll"),kWeak=$("kWeak"),kReset=$("kReset"),refTbl=$("refTbl"); /* ドリル */
@@ -385,7 +387,7 @@ function render(){
   qBox.innerHTML=`<div class="qhead"><span class="keyname">${fmt(k.r)}</span><span class="keytype">${k.t==="major"?"メジャーキー":"マイナーキー"}</span>
     <span class="qtag">${QLABEL[q.mode]}${q.mode!=="note"?" ・ "+(q.kind==="triad"?"三和音":"四和音"):""}</span></div>
     <div class="prompt">${keyLabel(k.t,k.r)} キー ${q.text[0]} <span class="tok">${q.tok}</span> ${q.text[1]}</div>
-    <div class="choices ${q.opts.length===7?"seven":""}">${q.opts.map((o,i)=>`<button id="opt${i}" data-v="${o}"><span class="k">${i+1}</span>${o}</button>`).join("")}</div>
+    <div class="choices ${q.opts.length===7?"seven":""}">${q.opts.map((o,i)=>`<button id="opt${i}" data-v="${esc(o)}"><span class="k">${i+1}</span>${esc(o)}</button>`).join("")}</div>
     <div id="rv"></div>`;
   qBox.querySelectorAll(".choices button").forEach(b=>b.onclick=()=>answer(b.dataset.v));
   renderRef();
@@ -478,15 +480,20 @@ function renderList(){
       const v=show==="notes"?fmt(notes[i]):ch[i].name;const h=hide&&hidden.has(r+"|"+i);
       const tn=L().tones==="on"&&show!=="notes"?`<small class="tn">${toneInfo(t,r,i,tk).map(x=>x.n).join(" ")}</small>`:"";
       const isSel=sel.r===r&&sel.i===i;
-      return `<td class="${i===0?"i0":""} ${h?"hid":""} ${isSel&&!h?"sel":""}"><button data-cell="${r}|${i}" aria-label="${h?"隠れているマス":v}"><span>${v}${tn}</span></button></td>`}).join("")}</tr>`}).join("");
+      return `<td class="${i===0?"i0":""} ${h?"hid":""} ${isSel&&!h?"sel":""}"><button data-cell="${r}|${i}" data-label="${esc(v)}" aria-label="${h?"隠れているマス":esc(v)}"><span>${esc(v)}${tn}</span></button></td>`}).join("")}</tr>`}).join("");
   lt.innerHTML=`<thead><tr><th><button disabled style="cursor:default">キー</button></th>${head.map((h,i)=>`<th><button data-col="${i}">${h}</button></th>`).join("")}</tr></thead><tbody>${rows}</tbody>`;
   syncListSeg();renderDetail();
 }
-function toggleGroup(ids){if(L().hide!=="hide")return;const anyHid=ids.some(id=>hidden.has(id));ids.forEach(id=>anyHid?hidden.delete(id):hidden.add(id));renderList()}
+/* めくる・選ぶ操作では表を作り直さず、そのマスの見た目だけ更新する（フォーカスも保たれる） */
+function paintCell(id){const b=lt.querySelector(`[data-cell="${id}"]`);if(!b)return;
+  const h=L().hide==="hide"&&hidden.has(id),isSel=sel.r+"|"+sel.i===id;
+  b.parentElement.classList.toggle("hid",h);b.parentElement.classList.toggle("sel",isSel&&!h);
+  b.setAttribute("aria-label",h?"隠れているマス":b.dataset.label)}
+function toggleGroup(ids){if(L().hide!=="hide")return;const anyHid=ids.some(id=>hidden.has(id));ids.forEach(id=>anyHid?hidden.delete(id):hidden.add(id));ids.forEach(paintCell);renderDetail()}
 lt.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
   if(b.dataset.cell){const id=b.dataset.cell,[r,si]=id.split("|"),i=+si,same=sel.r===r&&sel.i===i;
     if(L().hide==="hide"){if(hidden.has(id))hidden.delete(id);else if(same)hidden.add(id)}
-    sel={r,i};renderList()}
+    const prev=sel.r+"|"+sel.i;sel={r,i};paintCell(prev);paintCell(id);renderDetail()}
   else if(b.dataset.row){toggleGroup([0,1,2,3,4,5,6].map(i=>b.dataset.row+"|"+i))}
   else if(b.dataset.col){toggleGroup(listKeys().map(r=>r+"|"+b.dataset.col))}});
 function syncListSeg(){document.querySelectorAll("[data-lset]").forEach(g=>g.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",L()[g.dataset.lset]===b.dataset.v)))}
