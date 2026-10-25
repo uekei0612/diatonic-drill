@@ -417,9 +417,10 @@ function answer(v){
   renderStats();renderKeys();
 }
 document.addEventListener("keydown",e=>{
-  if(view!=="drill"||(e.target.closest&&e.target.closest("summary")))return;
+  if(view!=="drill"||e.ctrlKey||e.metaKey||e.altKey||(e.target.closest&&e.target.closest("summary")))return;
   if(cur&&!cur.done&&/^[1-7]$/.test(e.key)){const b=document.getElementById("opt"+(e.key-1));if(b)answer(b.dataset.v)}
-  else if(cur&&cur.done&&e.key==="Enter"&&e.target.id!=="next"){e.preventDefault();render()}
+  /* ボタン上の Enter はそのボタン自身の操作に任せる（#next もネイティブのクリックで次へ進む） */
+  else if(cur&&cur.done&&e.key==="Enter"&&!(e.target.closest&&e.target.closest("button"))){e.preventDefault();render()}
 });
 
 /* ---- panels ---- */
