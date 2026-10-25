@@ -308,6 +308,15 @@ svg .f-hl{fill:color-mix(in oklab,var(--root) var(--hl),var(--card))} svg .f-car
 
 <script src="theory.js"></script>
 <script>
+/* ---- DOM ---- */
+const $=id=>document.getElementById(id);
+const themeBtn=$("themeBtn"),listView=$("listView"),drillView=$("drillView"),helpView=$("helpView");
+const sAcc=$("sAcc"),sStreak=$("sStreak"),sBest=$("sBest"),sTotal=$("sTotal");                    /* 成績 */
+const qBox=$("q"),keysBox=$("keys"),kLegend=$("kLegend"),kAll=$("kAll"),kWeak=$("kWeak"),kReset=$("kReset"),refTbl=$("refTbl"); /* ドリル */
+const lt=$("lt"),ldetail=$("ldetail"),lhint=$("lhint");                                            /* 全一覧 */
+const hkList=$("hkList"),hPat=$("hPat"),hPos=$("hPos"),hStrip=$("hStrip"),hMinor=$("hMinor"),hSharp=$("hSharp"),hFlat=$("hFlat"),
+  hSig=$("hSig"),hCof=$("hCof"),hFb=$("hFb"),hFbNote=$("hFbNote"),hProg=$("hProg");                 /* 覚え方 */
+
 const PROGRESSIONS=[ /* [名前, 度数の並び（0 = Ⅰ）, 三和音か四和音か] */
   ["王道進行",[3,4,2,5],"seventh"],["カノン進行",[0,4,5,2,3,0,3,4],"triad"],["Ⅱ-Ⅴ-Ⅰ",[1,4,0],"seventh"],["小室進行",[5,3,4,0],"triad"]];
 const QLABEL={d2c:"度数→コード",c2d:"コード→度数",note:"構成音"};
@@ -373,13 +382,12 @@ function make(){
 
 function render(){
   cur=make();const q=cur,k=q.key;
-  const el=document.getElementById("q");
-  el.innerHTML=`<div class="qhead"><span class="keyname">${fmt(k.r)}</span><span class="keytype">${k.t==="major"?"メジャーキー":"マイナーキー"}</span>
+  qBox.innerHTML=`<div class="qhead"><span class="keyname">${fmt(k.r)}</span><span class="keytype">${k.t==="major"?"メジャーキー":"マイナーキー"}</span>
     <span class="qtag">${QLABEL[q.mode]}${q.mode!=="note"?" ・ "+(q.kind==="triad"?"三和音":"四和音"):""}</span></div>
     <div class="prompt">${keyLabel(k.t,k.r)} キー ${q.text[0]} <span class="tok">${q.tok}</span> ${q.text[1]}</div>
     <div class="choices ${q.opts.length===7?"seven":""}">${q.opts.map((o,i)=>`<button id="opt${i}" data-v="${o}"><span class="k">${i+1}</span>${o}</button>`).join("")}</div>
     <div id="rv"></div>`;
-  el.querySelectorAll(".choices button").forEach(b=>b.onclick=()=>answer(b.dataset.v));
+  qBox.querySelectorAll(".choices button").forEach(b=>b.onclick=()=>answer(b.dataset.v));
   renderRef();
 }
 function answer(v){
@@ -389,18 +397,18 @@ function answer(v){
   if(ok){s.c++;store.correct++;streak++;store.best=Math.max(store.best,streak)}else streak=0;save();
   const kl=keyLabel(q.key.t,q.key.r),c=q.ch[q.i];
   const exp=q.mode==="note"?`${kl} キーの構成音：${q.notes.map(fmt).join(" ")}`:`${kl} キーの ${c.deg} ＝ ${c.name}（${c.tones.join("・")}）`;
-  document.getElementById("rv").innerHTML=`<div class="reveal">
+  $("rv").innerHTML=`<div class="reveal">
     <div class="verdict ${ok?"ok":"ng"}">${ok?"正解":"不正解 — 答えは "+q.ans}</div>
     <div class="explain">${exp}</div>
     <div class="strip-scroll"><div class="strip">${q.ch.map(o=>`<div class="col ${o.i===q.i?"hit":""}">
       <div class="dot ${o.i===0?"r":""}">${NDEG[q.key.t][o.i]}</div><div class="nn">${fmt(q.notes[o.i])}</div><div class="cn">${o.name}</div><div class="dg">${o.deg}</div></div>`).join("")}</div></div>
     <button class="next" id="next">次の問題 →</button><div class="hint">Enter で次へ／数字キーで回答</div></div>`;
-  document.getElementById("next").onclick=render;document.getElementById("next").focus({preventScroll:true});
+  $("next").onclick=render;$("next").focus({preventScroll:true});
   renderStats();renderKeys();
 }
 document.addEventListener("keydown",e=>{
   if(view!=="drill"||e.ctrlKey||e.metaKey||e.altKey||(e.target.closest&&e.target.closest("summary")))return;
-  if(cur&&!cur.done&&/^[1-7]$/.test(e.key)){const b=document.getElementById("opt"+(e.key-1));if(b)answer(b.dataset.v)}
+  if(cur&&!cur.done&&/^[1-7]$/.test(e.key)){const b=$("opt"+(e.key-1));if(b)answer(b.dataset.v)}
   /* ボタン上の Enter はそのボタン自身の操作に任せる（#next もネイティブのクリックで次へ進む） */
   else if(cur&&cur.done&&e.key==="Enter"&&!(e.target.closest&&e.target.closest("button"))){e.preventDefault();render()}
 });
@@ -412,7 +420,7 @@ function renderKeys(){
   const noneOn=types.every(t=>KEYS[t].every(r=>off.has(keyId(t,r))));
   kLegend.textContent=noneOn?"出題対象のキーが選ばれていないため、全キーから出題しています。":"緑ほど得意、赤ほど苦手。苦手なキーほど出題されやすくなります。";
   kLegend.classList.toggle("warn",noneOn);
-  document.getElementById("keys").innerHTML=types.map(t=>`<div class="krow">${KEYS[t].map(r=>{
+  keysBox.innerHTML=types.map(t=>`<div class="krow">${KEYS[t].map(r=>{
     const id=keyId(t,r),s=store.keys[id],acc=s&&s.t?Math.round(s.c/s.t*100):null;
     const st=acc===null?"":`--heat:color-mix(in oklab,var(--ok) ${acc}%,var(--ng));--hp:${18+Math.min(s.t,10)*2}`;
     const isCur=cur&&cur.key.id===id;
@@ -543,20 +551,20 @@ function drawCof(){
   hCof.innerHTML=s;
 }
 function drawFb(){
-  const x=(pc(hKey)-4+12)%12,lo=x,n=7,L=26,R=432,T=22,G=30,w=(R-L)/n;
-  const sy=s=>T+(s-1)*G; /* string 1 (high E) on top */
+  const x=(pc(hKey)-4+12)%12,lo=x,n=7,X0=26,X1=432,Y0=22,GAP=30,w=(X1-X0)/n;
+  const sy=s=>Y0+(s-1)*GAP; /* string 1 (high E) on top */
   let s="";
-  for(let f=lo;f<lo+n;f++){const cx=L+(f-lo+0.5)*w,mid=sy(3.5);
+  for(let f=lo;f<lo+n;f++){const cx=X0+(f-lo+0.5)*w,mid=sy(3.5);
     if([3,5,7,9,15,17].includes(f))s+=SV("circle",{cx,cy:mid,r:5,class:"f-mark"});
     if(f===12){s+=SV("circle",{cx,cy:sy(2.5),r:5,class:"f-mark"})+SV("circle",{cx,cy:sy(4.5),r:5,class:"f-mark"})}
     s+=SV("text",{x:cx,y:sy(6)+30,"text-anchor":"middle","font-size":14,"font-family":"IBM Plex Mono,monospace",class:[3,5,7,9,12,15,17].includes(f)?"t-ink":"t-muted","font-weight":[3,5,7,9,12,15,17].includes(f)?700:400},f);}
-  for(let f=lo;f<=lo+n;f++){const xx=L+(f-lo)*w;const nut=f===1&&lo===0;
+  for(let f=lo;f<=lo+n;f++){const xx=X0+(f-lo)*w;const nut=f===1&&lo===0;
     if(lo===0&&f===0)continue;
     s+=SV("line",{x1:xx,y1:sy(1),x2:xx,y2:sy(6),class:nut?"s-ink":"s-line","stroke-width":nut?5:1.5});}
-  ["E","B","G","D","A","E"].forEach((nm,i)=>{s+=SV("line",{x1:lo===0?L+w:L,y1:sy(i+1),x2:R,y2:sy(i+1),class:"s-ink","stroke-width":0.6+i*0.3,opacity:.7});
-    s+=SV("text",{x:L-16,y:sy(i+1)+4,"text-anchor":"middle","font-size":13,"font-family":"IBM Plex Mono,monospace",class:"t-muted"},(i+1)+"");});
+  ["E","B","G","D","A","E"].forEach((nm,i)=>{s+=SV("line",{x1:lo===0?X0+w:X0,y1:sy(i+1),x2:X1,y2:sy(i+1),class:"s-ink","stroke-width":0.6+i*0.3,opacity:.7});
+    s+=SV("text",{x:X0-16,y:sy(i+1)+4,"text-anchor":"middle","font-size":13,"font-family":"IBM Plex Mono,monospace",class:"t-muted"},(i+1)+"");});
   const ch=chordsOf("major",hKey,"triad");
-  FB_POS.forEach(({str,off,i})=>{const f=x+off;if(f<lo||f>=lo+n)return;const cx=L+(f-lo+0.5)*w,cy=sy(str);
+  FB_POS.forEach(({str,off:dx,i})=>{const f=x+dx;if(f<lo||f>=lo+n)return;const cx=X0+(f-lo+0.5)*w,cy=sy(str);
     s+=SV("circle",{cx,cy,r:17,class:i===0?"f-root":"f-dot"});
     s+=SV("text",{x:cx,y:cy+5,"text-anchor":"middle","font-size":ch[i].deg.length>2?11:14,"font-weight":700,class:"t-white"},ch[i].deg);});
   hFb.innerHTML=s;
