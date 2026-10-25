@@ -382,7 +382,9 @@ function make(){
   return q; /* 同じ問題しか作れない設定でも止まらないように */
 }
 
-function render(){
+/* 問題カードを作り直すと中のフォーカスが失われる。カード内（「次の問題」など）にあったときや
+   キーボードで次へ進んだときは、新しい最初の選択肢へ移す。設定ボタンからの作り直しでは動かさない */
+function render(focusFirst=qBox.contains(document.activeElement)){
   cur=make();const q=cur,k=q.key;
   qBox.innerHTML=`<div class="qhead"><span class="keyname">${fmt(k.r)}</span><span class="keytype">${k.t==="major"?"メジャーキー":"マイナーキー"}</span>
     <span class="qtag">${QLABEL[q.mode]}${q.mode!=="note"?" ・ "+(q.kind==="triad"?"三和音":"四和音"):""}</span></div>
@@ -390,6 +392,7 @@ function render(){
     <div class="choices ${q.opts.length===7?"seven":""}">${q.opts.map((o,i)=>`<button id="opt${i}" data-v="${esc(o)}"><span class="k">${i+1}</span>${esc(o)}</button>`).join("")}</div>
     <div id="rv"></div>`;
   qBox.querySelectorAll(".choices button").forEach(b=>b.onclick=()=>answer(b.dataset.v));
+  if(focusFirst)$("opt0").focus({preventScroll:true});
   renderRef();
 }
 function answer(v){
@@ -405,14 +408,14 @@ function answer(v){
     <div class="strip-scroll"><div class="strip">${q.ch.map(o=>`<div class="col ${o.i===q.i?"hit":""}">
       <div class="dot ${o.i===0?"r":""}">${NDEG[q.key.t][o.i]}</div><div class="nn">${fmt(q.notes[o.i])}</div><div class="cn">${o.name}</div><div class="dg">${o.deg}</div></div>`).join("")}</div></div>
     <button class="next" id="next">次の問題 →</button><div class="hint">Enter で次へ／数字キーで回答</div></div>`;
-  $("next").onclick=render;$("next").focus({preventScroll:true});
+  $("next").onclick=()=>render();$("next").focus({preventScroll:true});
   renderStats();renderKeys();
 }
 document.addEventListener("keydown",e=>{
   if(view!=="drill"||e.ctrlKey||e.metaKey||e.altKey||(e.target.closest&&e.target.closest("summary")))return;
   if(cur&&!cur.done&&/^[1-7]$/.test(e.key)){const b=$("opt"+(e.key-1));if(b)answer(b.dataset.v)}
   /* ボタン上の Enter はそのボタン自身の操作に任せる（#next もネイティブのクリックで次へ進む） */
-  else if(cur&&cur.done&&e.key==="Enter"&&!(e.target.closest&&e.target.closest("button"))){e.preventDefault();render()}
+  else if(cur&&cur.done&&e.key==="Enter"&&!(e.target.closest&&e.target.closest("button"))){e.preventDefault();render(true)}
 });
 
 /* ---- panels ---- */
