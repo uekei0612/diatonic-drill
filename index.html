@@ -1313,8 +1313,9 @@
       const CONFIRM_MS = 2500; /* 「もう一度押すと消去」の受付時間 */
 
       /* ---- persistence ---- */
+      const keyId = (t, r) => t + ":" + r;
       const SK = "diatonic-drill-v1"; /* 既存の記録を引き継ぐため、キー名は変えない */
-      const STORE_VERSION = 1;
+      const STORE_VERSION = 2; /* v2: キー ID を "m:A" から "major:A" / "minor:A" に分けた（#22） */
       const DEFAULTS = {
         settings: { mode: "mix", scale: "major", chord: "triad" } /* ドリル */,
         list: { scale: "major", show: "triad", order: "fifths", hide: "open", tones: "off" } /* 全一覧 */,
@@ -1323,6 +1324,18 @@
       const choicesOf = (attr, name) =>
         [...document.querySelectorAll(`[${attr}="${name}"] button`)].map(b => b.dataset.v);
       /* 保存データを項目ごとに読み、欠けた項目や想定外の値は初期値に戻す */
+      /* v1 の ID "m:X" はメジャーとマイナーの区別が無かった（"major" も "minor" も頭文字が m）。
+         どちらの記録かはもう分からないので、X をルートに持つキーすべてへ写し、今までの見え方を保つ */
+      function migrateV1(s) {
+        const split = id => {
+          const r = typeof id === "string" && id.startsWith("m:") ? id.slice(2) : null;
+          return r ? ["major", "minor"].filter(t => KEYS[t].includes(r)).map(t => keyId(t, r)) : [];
+        };
+        const keys = {};
+        for (const [id, v] of Object.entries(s.keys && typeof s.keys === "object" ? s.keys : {}))
+          for (const nid of split(id)) keys[nid] = v;
+        return { ...s, keys, off: Array.isArray(s.off) ? s.off.flatMap(split) : [] };
+      }
       function loadStore() {
         let s = null;
         try {
@@ -1330,6 +1343,7 @@
         } catch (e) {}
         if (!s || typeof s !== "object") s = {};
         /* version の無いデータは v1（この形式の最初の版）として読む。版を上げるときはここで旧形式を変換する */
+        if ((s.version || 1) < 2) s = migrateV1(s);
         const count = v => (Number.isInteger(v) && v >= 0 ? v : 0);
         const pick = (attr, saved, def) =>
           Object.fromEntries(
@@ -1360,7 +1374,6 @@
         cur = null,
         lastSig = "";
       const drillSettings = () => store.settings;
-      const keyId = (t, r) => t[0] + ":" + r;
       /* ドリルの「スケール」設定で出題対象になるスケール */
       const activeScales = () => (drillSettings().scale === "both" ? ["major", "minor"] : [drillSettings().scale]);
       const off = new Set(store.off);

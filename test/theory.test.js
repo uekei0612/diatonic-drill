@@ -2,7 +2,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const T = require("../theory.js");
 
-const ALL_KEYS = ["major", "minor"].flatMap(t => T.KEYS[t].map(r => ({ t, r, id: t[0] + ":" + r })));
+const ALL_KEYS = ["major", "minor"].flatMap(t => T.KEYS[t].map(r => ({ t, r, id: t + ":" + r })));
 
 test("扱うキーは各 12、五度圏と ♯系→♭系 で同じ集合", () => {
   for (const t of ["major", "minor"]) {
