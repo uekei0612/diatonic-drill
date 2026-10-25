@@ -99,3 +99,41 @@ test("出題：どのキー・形式でも選択肢は重複せず、正解を�
           if (mode === "note") assert.ok(q.i >= 1 && q.i <= 6, where);
         }
 });
+
+test("マイナーの Ⅴ・Ⅶ をハーモニックから借りると、その 2 つだけ変わる", () => {
+  for (const r of T.KEYS.minor)
+    for (const kind of ["triad", "seventh"]) {
+      const nat = T.chordsOf("minor", r, kind),
+        dom = T.chordsOf("minor", r, kind, true);
+      const want = kind === "triad" ? ["", "dim"] : ["7", "dim7"];
+      assert.deepEqual([dom[4].q, dom[6].q], want, `${r}m ${kind}`);
+      assert.deepEqual([dom[4].deg, dom[6].deg], ["Ⅴ" + want[0], "Ⅶ" + want[1]], `${r}m ${kind}`);
+      for (const i of [0, 1, 2, 3, 5]) assert.deepEqual(dom[i], nat[i], `${r}m ${kind} ${i}`);
+      assert.equal(T.pc(dom[6].root), (T.pc(r) + 11) % 12, `${r}m の Ⅶ は導音`);
+    }
+  assert.equal(T.chordsOf("major", "C", "seventh", true)[4].name, "G7", "メジャーキーには効かない");
+});
+
+test("借りた Ⅴ・Ⅶ の構成音", () => {
+  const am = T.chordsOf("minor", "A", "seventh", true);
+  assert.deepEqual(am[4].tones, ["E", "G♯", "B", "D"]);
+  assert.deepEqual(am[6].tones, ["G♯", "B", "D", "F"]);
+  assert.deepEqual(
+    T.toneInfo("minor", "A", 6, "seventh", true).map(x => x.lab),
+    ["R", "♭3", "♭5", "♭♭7"],
+  );
+  assert.equal(T.chordsOf("minor", "G#", "triad", true)[6].name, "F♯♯dim", "G♯m の導音は F𝄪");
+  assert.equal(T.chordsOf("minor", "Eb", "seventh", true)[4].name, "B♭7");
+});
+
+test("出題：借りた Ⅴ・Ⅶ でも選択肢は重複せず、正解を含む", () => {
+  const minors = T.KEYS.minor.map(r => ({ t: "minor", r, id: "minor:" + r }));
+  for (let n = 0; n < 50; n++)
+    for (const k of minors)
+      for (const mode of ["d2c", "c2d", "note"])
+        for (const kind of ["triad", "seventh"]) {
+          const q = T.buildQuestion(k, mode, kind, true);
+          assert.equal(new Set(q.opts).size, q.opts.length, `${k.id} ${mode}: ${q.opts}`);
+          assert.ok(q.opts.includes(q.ans), `${k.id} ${mode}: ${q.ans} / ${q.opts}`);
+        }
+});

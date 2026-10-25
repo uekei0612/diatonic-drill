@@ -3,15 +3,18 @@
    Node ではテストから require() する。 */
 const LET = "CDEFGAB",
   LPC = [0, 2, 4, 5, 7, 9, 11];
-const IV = { major: [0, 2, 4, 5, 7, 9, 11], minor: [0, 2, 3, 5, 7, 8, 10] };
+/* minor はナチュラルマイナー。harmonic は Ⅴ・Ⅶ のコードを借りるためだけに使う（第7音を半音上げた形） */
+const IV = { major: [0, 2, 4, 5, 7, 9, 11], minor: [0, 2, 3, 5, 7, 8, 10], harmonic: [0, 2, 3, 5, 7, 8, 11] };
 const ROMAN = ["Ⅰ", "Ⅱ", "Ⅲ", "Ⅳ", "Ⅴ", "Ⅵ", "Ⅶ"];
 const NDEG = { major: ["R", "2", "3", "4", "5", "6", "7"], minor: ["R", "2", "♭3", "4", "5", "♭6", "♭7"] };
+/* 主音からの半音数 → 度数の表記（NDEG と同じ書き方） */
+const DEG_OF = { 0: "R", 2: "2", 3: "♭3", 4: "3", 5: "4", 7: "5", 8: "♭6", 9: "6", 10: "♭7", 11: "7" };
 /* 扱うキーはこの五度圏の並びが正本。同じ位置のメジャーとマイナーは平行調（F♯ と E♭m は異名同音で揃えている） */
 const FIFTHS = {
   major: ["C", "G", "D", "A", "E", "B", "F#", "Db", "Ab", "Eb", "Bb", "F"],
   minor: ["A", "E", "B", "F#", "C#", "G#", "Eb", "Bb", "F", "C", "G", "D"],
 };
-const QT = { triad: ["", "m", "dim"], seventh: ["M7", "7", "m7", "m7(♭5)"] };
+const QT = { triad: ["", "m", "dim"], seventh: ["M7", "7", "m7", "m7(♭5)", "dim7"] };
 
 const parse = n => ({ l: LET.indexOf(n[0]), a: [...n.slice(1)].reduce((s, c) => s + (c === "#" ? 1 : -1), 0) });
 const accStr = d => (d > 0 ? "#".repeat(d) : "b".repeat(-d));
@@ -39,9 +42,9 @@ function spell(root, ivs) {
     return LET[l] + accStr(d);
   });
 }
-function chordsOf(type, root, kind) {
-  const ivs = IV[type],
-    notes = spell(root, ivs);
+/* ivs のスケールの各音をルートにした三和音／四和音 */
+function chordsFrom(ivs, root, kind) {
+  const notes = spell(root, ivs);
   return notes.map((n, i) => {
     const a = ivs[i],
       t3 = (ivs[(i + 2) % 7] - a + 12) % 12,
@@ -50,7 +53,10 @@ function chordsOf(type, root, kind) {
     let q;
     if (kind === "triad")
       q = t3 === 4 && t5 === 7 ? "" : t3 === 3 && t5 === 7 ? "m" : t3 === 3 && t5 === 6 ? "dim" : "aug";
-    else q = { "4,7,11": "M7", "4,7,10": "7", "3,7,10": "m7", "3,6,10": "m7(♭5)" }[[t3, t5, t7].join()] || "?";
+    else
+      q =
+        { "4,7,11": "M7", "4,7,10": "7", "3,7,10": "m7", "3,6,10": "m7(♭5)", "3,6,9": "dim7" }[[t3, t5, t7].join()] ||
+        "?";
     const pre = ivs[i] < IV.major[i] ? "♭" : "";
     return {
       i,
@@ -58,9 +64,19 @@ function chordsOf(type, root, kind) {
       q,
       name: fmt(n) + q,
       deg: pre + ROMAN[i] + q,
+      nd: DEG_OF[a] /* ルートの度数（主音から見た位置） */,
       tones: (kind === "triad" ? [0, 2, 4] : [0, 2, 4, 6]).map(k => fmt(notes[(i + k) % 7])),
+      semis: [0, t3, t5, t7].slice(0, kind === "triad" ? 3 : 4) /* 構成音のルートからの半音数 */,
     };
   });
+}
+/* キーのダイアトニックコード。dominant = true のマイナーキーは、Ⅴ と Ⅶ だけハーモニックマイナーから借りる
+   （曲で使うマイナーの形：Am なら Em → E / E7、G → G♯dim / G♯dim7。ほかの 5 つとスケールの音はナチュラルのまま） */
+function chordsOf(type, root, kind, dominant = false) {
+  const nat = chordsFrom(IV[type], root, kind);
+  if (!(dominant && type === "minor")) return nat;
+  const har = chordsFrom(IV.harmonic, root, kind);
+  return nat.map((c, i) => (i === 4 || i === 6 ? har[i] : c));
 }
 function alter(n) {
   const p = parse(n);
@@ -93,13 +109,10 @@ const KEYS = Object.fromEntries(
 );
 const keyLabel = (t, r) => fmt(r) + (t === "minor" ? "m" : "");
 const TLAB = { 3: "♭3", 4: "3", 6: "♭5", 7: "5", 8: "♯5", 9: "6", 10: "♭7", 11: "7" };
-function toneInfo(t, r, i, kind) {
-  const notes = spell(r, IV[t]),
-    rp = pc(notes[i]);
-  return (kind === "seventh" ? [0, 2, 4, 6] : [0, 2, 4]).map((k, j) => {
-    const n = notes[(i + k) % 7];
-    return { n: fmt(n), lab: j === 0 ? "R" : TLAB[(pc(n) - rp + 12) % 12] };
-  });
+/* コードの構成音と、ルートから見た度数（dim7 の第7音は 6 ではなく ♭♭7 と書く） */
+function toneInfo(t, r, i, kind, dominant = false) {
+  const c = chordsOf(t, r, kind, dominant)[i];
+  return c.tones.map((n, j) => ({ n, lab: j === 0 ? "R" : j === 3 && c.semis[j] === 9 ? "♭♭7" : TLAB[c.semis[j]] }));
 }
 function fill(ans, pref, extra) {
   const out = [ans];
@@ -109,11 +122,12 @@ function fill(ans, pref, extra) {
   }
   return shuffle(out);
 }
-/* 1 問を作る。k = {t:"major"|"minor", r:ルート, id}、mode = d2c|c2d|note、kind = triad|seventh */
-function buildQuestion(k, mode, kind) {
-  const ch = chordsOf(k.t, k.r, kind),
+/* 1 問を作る。k = {t:"major"|"minor", r:ルート, id}、mode = d2c|c2d|note、kind = triad|seventh、
+   dominant = マイナーの Ⅴ・Ⅶ をハーモニックから借りるか（構成音の問題はスケールの音を問うので影響しない） */
+function buildQuestion(k, mode, kind, dominant = false) {
+  const ch = chordsOf(k.t, k.r, kind, dominant),
     notes = spell(k.r, IV[k.t]);
-  const q = { key: k, mode, kind, ch, notes };
+  const q = { key: k, mode, kind, dominant, ch, notes };
   if (mode === "d2c") {
     const c = rnd(ch);
     q.i = c.i;
@@ -154,6 +168,7 @@ if (typeof module !== "undefined")
     IV,
     ROMAN,
     NDEG,
+    DEG_OF,
     FIFTHS,
     QT,
     parse,
@@ -163,6 +178,7 @@ if (typeof module !== "undefined")
     rnd,
     shuffle,
     spell,
+    chordsFrom,
     chordsOf,
     alter,
     enh,

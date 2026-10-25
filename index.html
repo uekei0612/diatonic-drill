@@ -1103,6 +1103,13 @@
               <button id="l-major" data-v="major">メジャー</button><button id="l-minor" data-v="minor">マイナー</button>
             </div>
           </div>
+          <div class="seg" id="lseg-minorV" hidden>
+            <span class="seglab" id="llab-minorV">Ⅴ・Ⅶ</span>
+            <div class="opts" role="group" aria-labelledby="llab-minorV" data-lset="minorV">
+              <button id="lmv-natural" data-v="natural">ナチュラル（Ⅴm）</button
+              ><button id="lmv-dominant" data-v="dominant">曲で使う形（Ⅴ7）</button>
+            </div>
+          </div>
           <div class="seg">
             <span class="seglab" id="llab-show">表示</span>
             <div class="opts" role="group" aria-labelledby="llab-show" data-lset="show">
@@ -1146,6 +1153,13 @@
           <div class="tbl"><table class="pat" id="hPat"></table></div>
           <p class="say">「メジャー・マイナー・マイナー・メジャー・メジャー・マイナー・ディム」と唱えて覚える。</p>
           <p class="note"><b>マイナーキー</b>は平行調メジャーの Ⅵ から読み直すだけ：<span id="hMinor"></span></p>
+          <p class="note">
+            ただし曲では
+            <b>Ⅴ をメジャー（Ⅴ7）、Ⅶ を Ⅶdim7</b> にして使うことが多い（ハーモニックマイナーから借りる形）：<span
+              id="hMinorDom"
+            ></span
+            >。ドリルと全一覧の「Ⅴ・Ⅶ」で切り替えられる。
+          </p>
           <div class="strip-scroll"><div class="strip" id="hStrip"></div></div>
         </section>
 
@@ -1222,6 +1236,13 @@
               ><button id="s-both" data-v="both">両方</button>
             </div>
           </div>
+          <div class="seg" id="seg-minorV" hidden>
+            <span class="seglab" id="lab-minorV">Ⅴ・Ⅶ</span>
+            <div class="opts" role="group" aria-labelledby="lab-minorV" data-set="minorV">
+              <button id="mv-natural" data-v="natural">ナチュラル（Ⅴm）</button
+              ><button id="mv-dominant" data-v="dominant">曲で使う形（Ⅴ7）</button>
+            </div>
+          </div>
           <div class="seg">
             <span class="seglab" id="lab-chord">コード</span>
             <div class="opts" role="group" aria-labelledby="lab-chord" data-set="chord">
@@ -1287,6 +1308,7 @@
         hPos = $("hPos"),
         hStrip = $("hStrip"),
         hMinor = $("hMinor"),
+        hMinorDom = $("hMinorDom"),
         hSharp = $("hSharp"),
         hFlat = $("hFlat"),
         hSig = $("hSig"),
@@ -1317,8 +1339,16 @@
       const SK = "diatonic-drill-v1"; /* 既存の記録を引き継ぐため、キー名は変えない */
       const STORE_VERSION = 2; /* v2: キー ID を "m:A" から "major:A" / "minor:A" に分けた（#22） */
       const DEFAULTS = {
-        settings: { mode: "mix", scale: "major", chord: "triad" } /* ドリル */,
-        list: { scale: "major", show: "triad", order: "fifths", hide: "open", tones: "off" } /* 全一覧 */,
+        /* minorV: マイナーの Ⅴ・Ⅶ を natural（ナチュラル）のままにするか dominant（ハーモニックから借りる）か */
+        settings: { mode: "mix", scale: "major", chord: "triad", minorV: "natural" } /* ドリル */,
+        list: {
+          scale: "major",
+          show: "triad",
+          order: "fifths",
+          hide: "open",
+          tones: "off",
+          minorV: "natural",
+        } /* 全一覧 */,
       };
       /* 選べる値は HTML のボタン（data-set / data-lset 内の data-v）が正本 */
       const choicesOf = (attr, name) =>
@@ -1415,7 +1445,7 @@
           const k = pickKey(),
             mode = drillSettings().mode === "mix" ? rnd(["d2c", "c2d", "note"]) : drillSettings().mode;
           const kind = drillSettings().chord === "both" ? rnd(["triad", "seventh"]) : drillSettings().chord;
-          q = buildQuestion(k, mode, kind);
+          q = buildQuestion(k, mode, kind, drillSettings().minorV === "dominant");
           const sig = k.id + mode + kind + q.i;
           if (sig === lastSig) continue;
           lastSig = sig;
@@ -1462,17 +1492,18 @@
         save();
         const kl = keyLabel(q.key.t, q.key.r),
           c = q.ch[q.i];
+        const borrowed = q.dominant && q.key.t === "minor" && (q.i === 4 || q.i === 6);
         const exp =
           q.mode === "note"
             ? `${kl} キーの構成音：${q.notes.map(fmt).join(" ")}`
-            : `${kl} キーの ${c.deg} ＝ ${c.name}（${c.tones.join("・")}）`;
+            : `${kl} キーの ${c.deg} ＝ ${c.name}（${c.tones.join("・")}）${borrowed ? "　※ハーモニックマイナーから借りた形" : ""}`;
         $("rv").innerHTML = `<div class="reveal">
     <div class="verdict ${ok ? "ok" : "ng"}">${ok ? "正解" : "不正解 — 答えは " + q.ans}</div>
     <div class="explain">${exp}</div>
     <div class="strip-scroll"><div class="strip">${q.ch
       .map(
         o => `<div class="col ${o.i === q.i ? "hit" : ""}">
-      <div class="dot ${o.i === 0 ? "r" : ""}">${NDEG[q.key.t][o.i]}</div><div class="nn">${fmt(q.notes[o.i])}</div><div class="cn">${o.name}</div><div class="dg">${o.deg}</div></div>`,
+      <div class="dot ${o.i === 0 ? "r" : ""}">${o.nd}</div><div class="nn">${fmt(o.root)}</div><div class="cn">${o.name}</div><div class="dg">${o.deg}</div></div>`,
       )
       .join("")}</div></div>
     <button class="next" id="next">次の問題 →</button><div class="hint">Enter で次へ／数字キーで回答</div></div>`;
@@ -1546,18 +1577,21 @@
       });
       function renderRef() {
         const k = cur.key,
-          t3 = chordsOf(k.t, k.r, "triad"),
-          t7 = chordsOf(k.t, k.r, "seventh");
+          t3 = chordsOf(k.t, k.r, "triad", cur.dominant),
+          t7 = chordsOf(k.t, k.r, "seventh", cur.dominant);
         refTbl.innerHTML = `<table><thead><tr><th>度数</th><th>音</th><th>三和音</th><th>四和音</th><th>構成音（四和音）</th></tr></thead><tbody>${t7
           .map(
             (c, i) =>
-              `<tr><td class="${i === 0 ? "rt" : ""}">${NDEG[k.t][i]}</td><td>${fmt(cur.notes[i])}</td><td>${t3[i].deg}　${t3[i].name}</td><td>${c.deg}　${c.name}</td><td>${c.tones.join(" ")}</td></tr>`,
+              `<tr><td class="${i === 0 ? "rt" : ""}">${c.nd}</td><td>${fmt(c.root)}</td><td>${t3[i].deg}　${t3[i].name}</td><td>${c.deg}　${c.name}</td><td>${c.tones.join(" ")}</td></tr>`,
           )
           .join("")}</tbody></table>`;
-        document.querySelector("#ref summary").textContent = `${keyLabel(k.t, k.r)} キーのダイアトニック表`;
+        document.querySelector("#ref summary").textContent =
+          `${keyLabel(k.t, k.r)} キーのダイアトニック表` +
+          (cur.dominant && k.t === "minor" ? "（Ⅴ・Ⅶ は曲で使う形）" : "");
       }
       /* ドリルの設定は data-set のボタン群だけ（全一覧の data-lset は syncListSeg が受け持つ） */
       function syncSeg() {
+        $("seg-minorV").hidden = drillSettings().scale === "major";
         document
           .querySelectorAll("[data-set]")
           .forEach(g =>
@@ -1623,6 +1657,8 @@
 
       /* ---- full list view ---- */
       let sel = { r: null, i: 0 };
+      /* 全一覧でマイナーの Ⅴ・Ⅶ をハーモニックから借りるか */
+      const listDominant = () => listSettings().minorV === "dominant";
       function renderDetail() {
         const t = listSettings().scale,
           kind = listSettings().show === "seventh" ? "seventh" : "triad";
@@ -1633,14 +1669,14 @@
         }
         if (listSettings().show === "notes") {
           const n = spell(sel.r, IV[t])[sel.i],
-            t3 = chordsOf(t, sel.r, "triad")[sel.i],
-            t7 = chordsOf(t, sel.r, "seventh")[sel.i];
+            t3 = chordsOf(t, sel.r, "triad", listDominant())[sel.i],
+            t7 = chordsOf(t, sel.r, "seventh", listDominant())[sel.i];
           ldetail.innerHTML = `<div class="dhead"><span class="dkey">${keyLabel(t, sel.r)} キー ・ ${NDEG[t][sel.i]}</span><span class="dname">${fmt(n)}</span></div>
       <div class="dmeta">この音をルートにするコード：${t3.deg} ${t3.name} ／ ${t7.deg} ${t7.name}</div>`;
           return;
         }
-        const c = chordsOf(t, sel.r, kind)[sel.i],
-          tn = toneInfo(t, sel.r, sel.i, kind);
+        const c = chordsOf(t, sel.r, kind, listDominant())[sel.i],
+          tn = toneInfo(t, sel.r, sel.i, kind, listDominant());
         ldetail.innerHTML = `<div class="dhead"><span class="dkey">${keyLabel(t, sel.r)} キー ・ ${c.deg}</span><span class="dname">${c.name}</span></div>
     <div class="dtones">${tn.map((x, j) => `<div class="dt"><div class="dot ${j === 0 ? "r" : ""}">${x.lab}</div><div class="dn">${x.n}</div></div>`).join("")}</div>`;
       }
@@ -1667,7 +1703,7 @@
           show = listSettings().show,
           keys = listKeys(),
           hide = listSettings().hide === "hide";
-        const head = show === "notes" ? NDEG[t] : chordsOf(t, "C", show).map(c => c.deg);
+        const head = show === "notes" ? NDEG[t] : chordsOf(t, "C", show, listDominant()).map(c => c.deg);
         lhint.textContent = hide
           ? "マスをタップでめくり、めくったマスをもう一度タップで隠す。キー名で行ごと、度数で列ごと切替。"
           : "マスをタップすると、上にそのコードの構成音（赤＝ルート、黒丸＝コード内の度数）を表示します。";
@@ -1675,7 +1711,7 @@
         const rows = keys
           .map(r => {
             const notes = spell(r, IV[t]),
-              ch = show === "notes" ? null : chordsOf(t, r, show);
+              ch = show === "notes" ? null : chordsOf(t, r, show, listDominant());
             const isCur = cur && cur.key.t === t && cur.key.r === r;
             return `<tr class="${isCur ? "cur" : ""}"><th><button data-row="${r}">${keyLabel(t, r)}<span class="acc">${sigLabel(t, r)}</span></button></th>${[
               0, 1, 2, 3, 4, 5, 6,
@@ -1685,7 +1721,7 @@
                 const h = hide && hidden.has(r + "|" + i);
                 const tn =
                   listSettings().tones === "on" && show !== "notes"
-                    ? `<small class="tn">${toneInfo(t, r, i, tk)
+                    ? `<small class="tn">${toneInfo(t, r, i, tk, listDominant())
                         .map(x => x.n)
                         .join(" ")}</small>`
                     : "";
@@ -1740,6 +1776,7 @@
         }
       });
       function syncListSeg() {
+        $("lseg-minorV").hidden = listSettings().scale !== "minor";
         document
           .querySelectorAll("[data-lset]")
           .forEach(g =>
@@ -1754,8 +1791,7 @@
           if (!b) return;
           const k = g.dataset.lset;
           listSettings()[k] = b.dataset.v;
-          if (listSettings().hide === "hide" && (k === "hide" || k === "scale" || k === "order" || k === "show"))
-            hideAll();
+          if (listSettings().hide === "hide" && ["hide", "scale", "order", "show", "minorV"].includes(k)) hideAll();
           save();
           renderList();
         }),
@@ -1852,6 +1888,8 @@
         const rel = notes[5],
           mc = chordsOf("minor", rel, "triad");
         hMinor.innerHTML = ` <b>${fmt(rel)}m キー</b> ＝ ${mc.map(c => c.name).join("・")}`;
+        const md = chordsOf("minor", rel, "seventh", true);
+        hMinorDom.innerHTML = `${fmt(rel)}m キーなら ${chordsOf("minor", rel, "seventh")[4].name} → <b>${md[4].name}</b>、${chordsOf("minor", rel, "seventh")[6].name} → <b>${md[6].name}</b>`;
         const sigN = keySig("major", hKey);
         hSharp.innerHTML = SHARPS.map((n, i) => `<span class="${sigN > 0 && i < sigN ? "on" : ""}">${n}</span>`).join(
           "",
