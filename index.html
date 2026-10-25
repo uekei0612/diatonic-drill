@@ -35,7 +35,7 @@ h1 span{color:var(--root)}
 
 .settings{display:flex;flex-direction:column;gap:8px}
 .seg{display:flex;align-items:center;gap:10px}
-.seg>label{font-size:.72rem;letter-spacing:.08em;color:var(--muted);width:4.5em;flex:none;white-space:nowrap}
+.seg>.seglab{font-size:.72rem;letter-spacing:.08em;color:var(--muted);width:4.5em;flex:none;white-space:nowrap}
 .seg .opts{display:flex;flex:1;min-width:0;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--card)}
 .seg button{flex:1 1 auto;min-width:0;font:inherit;font-size:.82rem;line-height:1.3;border:0;background:transparent;color:var(--ink);padding:6px 4px;cursor:pointer;border-right:1px solid var(--line)}
 .seg button:last-child{border-right:0}
@@ -179,7 +179,7 @@ svg .t-ink{fill:var(--ink)} svg .t-root{fill:var(--root)} svg .t-muted{fill:var(
 svg .s-line{stroke:var(--line)} svg .s-ink{stroke:var(--ink)} svg .f-root{fill:var(--root)} svg .f-dot{fill:var(--dot);stroke:var(--dot-ring);stroke-width:1.5}
 svg .f-hl{fill:color-mix(in oklab,var(--root) var(--hl),var(--card))} svg .f-card{fill:var(--card)} svg .f-mark{fill:var(--line)}
 @media (max-width:420px){.hk-list{grid-template-columns:repeat(6,minmax(0,1fr))}}
-@media (max-width:420px){.seg{gap:6px}.seg>label{width:3.5rem;letter-spacing:.02em}.seg button{font-size:.78rem;padding:6px 2px}.keyname{font-size:2.1rem}.choices.seven{grid-template-columns:repeat(3,minmax(0,1fr))}.krow{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media (max-width:420px){.seg{gap:6px}.seg>.seglab{width:3.5rem;letter-spacing:.02em}.seg button{font-size:.78rem;padding:6px 2px}.keyname{font-size:2.1rem}.choices.seven{grid-template-columns:repeat(3,minmax(0,1fr))}.krow{grid-template-columns:repeat(4,minmax(0,1fr))}}
 @media (max-width:380px){.tabs [role="tab"]{padding-inline:10px}.themebtn{padding-inline:9px}}
 @media (max-width:380px){.seg .opts[data-set="mode"]{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line)}.seg .opts[data-set="mode"] button{border-right:0;background:var(--card)}.seg .opts[data-set="mode"] button[aria-pressed="true"]{background:var(--sel-bg)}}
 @media (prefers-reduced-motion:no-preference){.reveal{animation:in .18s ease-out}@keyframes in{from{opacity:.4;transform:translateY(4px)}to{opacity:1;transform:none}}}
@@ -209,15 +209,15 @@ svg .f-hl{fill:color-mix(in oklab,var(--root) var(--hl),var(--card))} svg .f-car
 
   <div class="list" id="listView" role="tabpanel" aria-labelledby="tab-list" hidden>
     <div class="settings">
-      <div class="seg"><label>スケール</label><div class="opts" data-lset="scale">
+      <div class="seg"><span class="seglab" id="llab-scale">スケール</span><div class="opts" role="group" aria-labelledby="llab-scale" data-lset="scale">
         <button id="l-major" data-v="major">メジャー</button><button id="l-minor" data-v="minor">マイナー</button></div></div>
-      <div class="seg"><label>表示</label><div class="opts" data-lset="show">
+      <div class="seg"><span class="seglab" id="llab-show">表示</span><div class="opts" role="group" aria-labelledby="llab-show" data-lset="show">
         <button id="l-triad" data-v="triad">三和音</button><button id="l-seventh" data-v="seventh">四和音</button><button id="l-notes" data-v="notes">スケール音</button></div></div>
-      <div class="seg"><label>構成音</label><div class="opts" data-lset="tones">
+      <div class="seg"><span class="seglab" id="llab-tones">構成音</span><div class="opts" role="group" aria-labelledby="llab-tones" data-lset="tones">
         <button id="l-toff" data-v="off">タップで表示</button><button id="l-ton" data-v="on">マスにも表示</button></div></div>
-      <div class="seg"><label>並び</label><div class="opts" data-lset="order">
+      <div class="seg"><span class="seglab" id="llab-order">並び</span><div class="opts" role="group" aria-labelledby="llab-order" data-lset="order">
         <button id="l-fifths" data-v="fifths">五度圏</button><button id="l-group" data-v="group">♯系→♭系</button></div></div>
-      <div class="seg"><label>暗記</label><div class="opts" data-lset="hide">
+      <div class="seg"><span class="seglab" id="llab-hide">暗記</span><div class="opts" role="group" aria-labelledby="llab-hide" data-lset="hide">
         <button id="l-open" data-v="open">すべて表示</button><button id="l-hide" data-v="hide">隠してめくる</button></div></div>
     </div>
     <div class="detail" id="ldetail" aria-live="polite"></div>
@@ -290,11 +290,11 @@ svg .f-hl{fill:color-mix(in oklab,var(--root) var(--hl),var(--card))} svg .f-car
 
   <div class="drill" id="drillView" role="tabpanel" aria-labelledby="tab-drill">
   <div class="settings">
-    <div class="seg"><label>出題</label><div class="opts" data-set="mode">
+    <div class="seg"><span class="seglab" id="lab-mode">出題</span><div class="opts" role="group" aria-labelledby="lab-mode" data-set="mode">
       <button id="m-mix" data-v="mix">ミックス</button><button id="m-d2c" data-v="d2c">度数→コード</button><button id="m-c2d" data-v="c2d">コード→度数</button><button id="m-note" data-v="note">構成音</button></div></div>
-    <div class="seg"><label>スケール</label><div class="opts" data-set="scale">
+    <div class="seg"><span class="seglab" id="lab-scale">スケール</span><div class="opts" role="group" aria-labelledby="lab-scale" data-set="scale">
       <button id="s-major" data-v="major">メジャー</button><button id="s-minor" data-v="minor">マイナー</button><button id="s-both" data-v="both">両方</button></div></div>
-    <div class="seg"><label>コード</label><div class="opts" data-set="chord">
+    <div class="seg"><span class="seglab" id="lab-chord">コード</span><div class="opts" role="group" aria-labelledby="lab-chord" data-set="chord">
       <button id="c-triad" data-v="triad">三和音</button><button id="c-seventh" data-v="seventh">四和音</button><button id="c-both" data-v="both">両方</button></div></div>
   </div>
 
