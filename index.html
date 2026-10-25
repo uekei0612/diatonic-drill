@@ -1556,16 +1556,17 @@
           .join("")}</tbody></table>`;
         document.querySelector("#ref summary").textContent = `${keyLabel(k.t, k.r)} キーのダイアトニック表`;
       }
+      /* ドリルの設定は data-set のボタン群だけ（全一覧の data-lset は syncListSeg が受け持つ） */
       function syncSeg() {
         document
-          .querySelectorAll(".opts")
+          .querySelectorAll("[data-set]")
           .forEach(g =>
             g
               .querySelectorAll("button")
               .forEach(b => b.setAttribute("aria-pressed", drillSettings()[g.dataset.set] === b.dataset.v)),
           );
       }
-      document.querySelectorAll(".opts").forEach(g =>
+      document.querySelectorAll("[data-set]").forEach(g =>
         g.addEventListener("click", e => {
           const b = e.target.closest("button");
           if (!b) return;
