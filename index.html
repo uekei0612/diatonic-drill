@@ -468,6 +468,11 @@ function renderDetail(){
   const t=L().scale,kind=L().show==="seventh"?"seventh":"triad";
   if(!sel.r||!listKeys().includes(sel.r))sel={r:listKeys()[0],i:0};
   if(L().hide==="hide"&&hidden.has(sel.r+"|"+sel.i)){ldetail.innerHTML=`<div class="dmeta">マスをめくると、ここにそのコードの構成音が表示されます。</div>`;return}
+  if(L().show==="notes"){
+    const n=spell(sel.r,IV[t])[sel.i],t3=chordsOf(t,sel.r,"triad")[sel.i],t7=chordsOf(t,sel.r,"seventh")[sel.i];
+    ldetail.innerHTML=`<div class="dhead"><span class="dkey">${keyLabel(t,sel.r)} キー ・ ${NDEG[t][sel.i]}</span><span class="dname">${fmt(n)}</span></div>
+      <div class="dmeta">この音をルートにするコード：${t3.deg} ${t3.name} ／ ${t7.deg} ${t7.name}</div>`;
+    return}
   const c=chordsOf(t,sel.r,kind)[sel.i],tn=toneInfo(t,sel.r,sel.i,kind);
   ldetail.innerHTML=`<div class="dhead"><span class="dkey">${keyLabel(t,sel.r)} キー ・ ${c.deg}</span><span class="dname">${c.name}</span></div>
     <div class="dtones">${tn.map((x,j)=>`<div class="dt"><div class="dot ${j===0?"r":""}">${x.lab}</div><div class="dn">${x.n}</div></div>`).join("")}</div>`;
