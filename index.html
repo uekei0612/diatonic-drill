@@ -74,6 +74,7 @@ h1 span{color:var(--root)}
 .col .dg{font-size:.68rem;color:var(--muted)}
 .next{align-self:flex-end;font:inherit;font-weight:700;background:var(--sel-bg);color:var(--sel-fg);border:0;border-radius:10px;padding:10px 22px;cursor:pointer}
 .hint{font-size:.72rem;color:var(--muted);align-self:flex-end;margin-top:-8px}
+.sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 
 section h2{font-size:.78rem;letter-spacing:.1em;color:var(--muted);font-weight:500;margin:0 0 8px}
 .sechead{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
@@ -298,7 +299,8 @@ svg .f-hl{fill:color-mix(in oklab,var(--root) var(--hl),var(--card))} svg .f-car
       <button id="c-triad" data-v="triad">三和音</button><button id="c-seventh" data-v="seventh">四和音</button><button id="c-both" data-v="both">両方</button></div></div>
   </div>
 
-  <div class="q" id="q" aria-live="polite"></div>
+  <div class="q" id="q"></div>
+  <div class="sr-only" id="qLive" aria-live="polite"></div>
 
   <section>
     <div class="sechead"><h2>キー別の正解率（タップで出題対象を切替）</h2>
@@ -319,7 +321,7 @@ const $=id=>document.getElementById(id);
 const esc=v=>String(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const themeBtn=$("themeBtn"),listView=$("listView"),drillView=$("drillView"),helpView=$("helpView");
 const sAcc=$("sAcc"),sStreak=$("sStreak"),sBest=$("sBest"),sTotal=$("sTotal");                    /* 成績 */
-const qBox=$("q"),keysBox=$("keys"),kLegend=$("kLegend"),kAll=$("kAll"),kWeak=$("kWeak"),kReset=$("kReset"),refTbl=$("refTbl"); /* ドリル */
+const qBox=$("q"),qLive=$("qLive"),keysBox=$("keys"),kLegend=$("kLegend"),kAll=$("kAll"),kWeak=$("kWeak"),kReset=$("kReset"),refTbl=$("refTbl"); /* ドリル */
 const lt=$("lt"),ldetail=$("ldetail"),lhint=$("lhint");                                            /* 全一覧 */
 const hkList=$("hkList"),hPat=$("hPat"),hPos=$("hPos"),hStrip=$("hStrip"),hMinor=$("hMinor"),hSharp=$("hSharp"),hFlat=$("hFlat"),
   hSig=$("hSig"),hCof=$("hCof"),hFb=$("hFb"),hFbNote=$("hFbNote"),hProg=$("hProg");                 /* 覚え方 */
@@ -398,6 +400,8 @@ function render(focusFirst=qBox.contains(document.activeElement)){
     <div id="rv"></div>`;
   qBox.querySelectorAll(".choices button").forEach(b=>b.onclick=()=>answer(b.dataset.v));
   if(focusFirst)$("opt0").focus({preventScroll:true});
+  /* 読み上げは問題文と判定だけ（カード全体を live にすると選択肢まで毎回読み上げる） */
+  qLive.textContent=`${keyLabel(k.t,k.r)} キー ${q.text[0]} ${q.tok} ${q.text[1]}`;
   renderRef();
 }
 function answer(v){
@@ -414,6 +418,7 @@ function answer(v){
       <div class="dot ${o.i===0?"r":""}">${NDEG[q.key.t][o.i]}</div><div class="nn">${fmt(q.notes[o.i])}</div><div class="cn">${o.name}</div><div class="dg">${o.deg}</div></div>`).join("")}</div></div>
     <button class="next" id="next">次の問題 →</button><div class="hint">Enter で次へ／数字キーで回答</div></div>`;
   $("next").onclick=()=>render();$("next").focus({preventScroll:true});
+  qLive.textContent=`${ok?"正解":"不正解。答えは "+q.ans}。${exp}`;
   renderStats();renderKeys();
 }
 document.addEventListener("keydown",e=>{
