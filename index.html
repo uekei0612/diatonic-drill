@@ -362,13 +362,15 @@ try{const s=JSON.parse(localStorage.getItem(SK)||"null");if(s)store=Object.assig
 const save=()=>{try{localStorage.setItem(SK,JSON.stringify(store))}catch(e){}};
 let streak=0,cur=null,lastSig="";
 const S=()=>store.settings;
+const keyId=(t,r)=>t[0]+":"+r;
+/* ドリルの「スケール」設定で出題対象になるスケール */
+const activeScales=()=>S().scale==="both"?["major","minor"]:[S().scale];
 const off=new Set(store.off);
 function applyTheme(){const d=store.dark===true;document.documentElement.classList.toggle("dark",d);themeBtn.textContent=d?"白ベースに戻す":"ダーク表示";themeBtn.setAttribute("aria-pressed",d)}
 themeBtn.onclick=()=>{store.dark=!(store.dark===true);save();applyTheme()};applyTheme();
 
 /* ---- question ---- */
-function pool(){const types=S().scale==="both"?["major","minor"]:[S().scale];
-  const all=types.flatMap(t=>KEYS[t].map(r=>({t,r,id:t[0]+":"+r})));
+function pool(){const all=activeScales().flatMap(t=>KEYS[t].map(r=>({t,r,id:keyId(t,r)})));
   const on=all.filter(k=>!off.has(k.id));return on.length?on:all}
 function pickKey(){const p=pool();const w=p.map(k=>{const s=store.keys[k.id];return s?WEIGHT_BASE+WEIGHT_MISS*((s.t-s.c)/(s.t+1)):WEIGHT_UNSEEN});
   let x=Math.random()*w.reduce((a,b)=>a+b,0);for(let i=0;i<p.length;i++){x-=w[i];if(x<=0)return p[i]}return p[p.length-1]}
@@ -432,12 +434,12 @@ document.addEventListener("keydown",e=>{
 /* ---- panels ---- */
 function renderStats(){sAcc.textContent=store.total?Math.round(store.correct/store.total*100)+"%":"–";sStreak.textContent=streak;sBest.textContent=store.best;sTotal.textContent=store.total}
 function renderKeys(){
-  const types=S().scale==="both"?["major","minor"]:[S().scale];
-  const noneOn=types.every(t=>KEYS[t].every(r=>off.has(t[0]+":"+r)));
+  const types=activeScales();
+  const noneOn=types.every(t=>KEYS[t].every(r=>off.has(keyId(t,r))));
   kLegend.textContent=noneOn?"出題対象のキーが選ばれていないため、全キーから出題しています。":"緑ほど得意、赤ほど苦手。苦手なキーほど出題されやすくなります。";
   kLegend.classList.toggle("warn",noneOn);
   document.getElementById("keys").innerHTML=types.map(t=>`<div class="krow">${KEYS[t].map(r=>{
-    const id=t[0]+":"+r,s=store.keys[id],acc=s&&s.t?Math.round(s.c/s.t*100):null;
+    const id=keyId(t,r),s=store.keys[id],acc=s&&s.t?Math.round(s.c/s.t*100):null;
     const st=acc===null?"":`--heat:color-mix(in oklab,var(--ok) ${acc}%,var(--ng));--hp:${18+Math.min(s.t,10)*2}`;
     const isCur=cur&&cur.key.id===id;
     return `<button class="chip ${isCur?"sel":""}" id="k-${t}-${r.replace("#","s")}" data-id="${id}" aria-pressed="${!off.has(id)}" style="${st}"><span class="kn">${keyLabel(t,r)}</span><span class="pc">${acc===null?"—":acc+"% · "+s.t}</span></button>`}).join("")}</div>`).join("");
@@ -454,8 +456,7 @@ function syncSeg(){document.querySelectorAll(".opts").forEach(g=>g.querySelector
 document.querySelectorAll(".opts").forEach(g=>g.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
   S()[g.dataset.set]=b.dataset.v;save();syncSeg();render();renderKeys()}));
 kAll.onclick=()=>{off.clear();store.off=[];save();renderKeys()};
-kWeak.onclick=()=>{const types=S().scale==="both"?["major","minor"]:[S().scale];
-  const ids=types.flatMap(t=>KEYS[t].map(r=>t[0]+":"+r));
+kWeak.onclick=()=>{const ids=activeScales().flatMap(t=>KEYS[t].map(r=>keyId(t,r)));
   const weak=ids.filter(id=>{const s=store.keys[id];return s&&s.t>=WEAK_MIN_TRIES&&s.c/s.t<WEAK_MAX_ACC});
   if(!weak.length){kWeak.textContent=`苦手なし（${WEAK_MIN_TRIES}問以上・${Math.round(WEAK_MAX_ACC*100)}%未満が対象）`;setTimeout(()=>kWeak.textContent="苦手だけ",FLASH_MS);return}
   ids.forEach(id=>weak.includes(id)?off.delete(id):off.add(id));store.off=[...off];save();renderKeys();render()};
@@ -482,7 +483,7 @@ function renderDetail(){
     <div class="dtones">${tn.map((x,j)=>`<div class="dt"><div class="dot ${j===0?"r":""}">${x.lab}</div><div class="dn">${x.n}</div></div>`).join("")}</div>`;
 }
 const L=()=>store.list;let view="drill";const hidden=new Set();
-const accCount=n=>{const s=n.reduce((a,x)=>a+parse(x).a,0);return s===0?"":(s>0?"♯"+s:"♭"+(-s))};
+const sigLabel=(t,r)=>{const s=keySig(t,r);return s===0?"":(s>0?"♯"+s:"♭"+(-s))};
 function listKeys(){return L().order==="fifths"?FIFTHS[L().scale]:KEYS[L().scale]}
 let hiddenInit=false; /* 全部めくった（hidden が空の）状態と、まだ一度も隠していない状態を区別する */
 function hideAll(){hiddenInit=true;hidden.clear();listKeys().forEach(r=>{for(let i=0;i<7;i++)hidden.add(r+"|"+i)})}
@@ -495,7 +496,7 @@ function renderList(){
   const rows=keys.map(r=>{
     const notes=spell(r,IV[t]),ch=show==="notes"?null:chordsOf(t,r,show);
     const isCur=cur&&cur.key.t===t&&cur.key.r===r;
-    return `<tr class="${isCur?"cur":""}"><th><button data-row="${r}">${keyLabel(t,r)}<span class="acc">${accCount(notes)}</span></button></th>${[0,1,2,3,4,5,6].map(i=>{
+    return `<tr class="${isCur?"cur":""}"><th><button data-row="${r}">${keyLabel(t,r)}<span class="acc">${sigLabel(t,r)}</span></button></th>${[0,1,2,3,4,5,6].map(i=>{
       const v=show==="notes"?fmt(notes[i]):ch[i].name;const h=hide&&hidden.has(r+"|"+i);
       const tn=L().tones==="on"&&show!=="notes"?`<small class="tn">${toneInfo(t,r,i,tk).map(x=>x.n).join(" ")}</small>`:"";
       const isSel=sel.r===r&&sel.i===i;
