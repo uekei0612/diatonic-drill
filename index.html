@@ -475,7 +475,8 @@ function renderDetail(){
 const L=()=>store.list;let view="drill";const hidden=new Set();
 const accCount=n=>{const s=n.reduce((a,x)=>a+parse(x).a,0);return s===0?"":(s>0?"♯"+s:"♭"+(-s))};
 function listKeys(){return L().order==="fifths"?FIFTHS[L().scale]:KEYS[L().scale]}
-function hideAll(){hidden.clear();listKeys().forEach(r=>{for(let i=0;i<7;i++)hidden.add(r+"|"+i)})}
+let hiddenInit=false; /* 全部めくった（hidden が空の）状態と、まだ一度も隠していない状態を区別する */
+function hideAll(){hiddenInit=true;hidden.clear();listKeys().forEach(r=>{for(let i=0;i<7;i++)hidden.add(r+"|"+i)})}
 function renderList(){
   const t=L().scale,show=L().show,keys=listKeys(),hide=L().hide==="hide";
   const head=show==="notes"?NDEG[t]:chordsOf(t,"C",show).map(c=>c.deg.replace(/^♭?[ⅠⅡⅢⅣⅤⅥⅦ]/,m=>m));
@@ -505,7 +506,7 @@ document.querySelectorAll("[data-lset]").forEach(g=>g.addEventListener("click",e
   const k=g.dataset.lset;L()[k]=b.dataset.v;if(L().hide==="hide"&&(k==="hide"||k==="scale"||k==="order"||k==="show"))hideAll();save();renderList()}));
 document.querySelectorAll('.tabs [role=tab]').forEach(b=>b.onclick=()=>{view=b.dataset.view;
   document.querySelectorAll('.tabs [role=tab]').forEach(x=>x.setAttribute("aria-selected",x===b));
-  listView.hidden=view!=="list";drillView.hidden=view!=="drill";helpView.hidden=view!=="help";if(view==="help")renderHelp();if(view==="list"){if(L().hide==="hide"&&!hidden.size)hideAll();renderList()}});
+  listView.hidden=view!=="list";drillView.hidden=view!=="drill";helpView.hidden=view!=="help";if(view==="help")renderHelp();if(view==="list"){if(L().hide==="hide"&&!hiddenInit)hideAll();renderList()}});
 
 /* ---- help / cheat sheet ---- */
 let hKey="C";
