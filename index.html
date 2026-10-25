@@ -87,6 +87,7 @@ section h2{font-size:.78rem;letter-spacing:.1em;color:var(--muted);font-weight:5
 .chip[aria-pressed="false"]{opacity:.35}
 .chip.sel{border-color:var(--ink)}
 .legend{font-size:.72rem;color:var(--muted)}
+.legend.warn{color:var(--ng);font-weight:700}
 
 details{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 16px}
 summary{cursor:pointer;font-weight:500}
@@ -308,7 +309,7 @@ svg .f-hl{fill:color-mix(in oklab,var(--root) var(--hl),var(--card))} svg .f-car
     <div class="sechead"><h2>キー別の正解率（タップで出題対象を切替）</h2>
       <div class="acts"><button id="kAll">全キー</button><button id="kWeak">苦手だけ</button><button id="kReset">記録リセット</button></div></div>
     <div id="keys"></div>
-    <div class="legend">緑ほど得意、赤ほど苦手。苦手なキーほど出題されやすくなります。</div>
+    <div class="legend" id="kLegend"></div>
   </section>
 
   <details id="ref"><summary>このキーのダイアトニック表</summary><div class="tbl" id="refTbl"></div></details>
@@ -427,6 +428,9 @@ document.addEventListener("keydown",e=>{
 function renderStats(){sAcc.textContent=store.total?Math.round(store.correct/store.total*100)+"%":"–";sStreak.textContent=streak;sBest.textContent=store.best;sTotal.textContent=store.total}
 function renderKeys(){
   const types=S().scale==="both"?["major","minor"]:[S().scale];
+  const noneOn=types.every(t=>KEYS[t].every(r=>off.has(t[0]+":"+r)));
+  kLegend.textContent=noneOn?"出題対象のキーが選ばれていないため、全キーから出題しています。":"緑ほど得意、赤ほど苦手。苦手なキーほど出題されやすくなります。";
+  kLegend.classList.toggle("warn",noneOn);
   document.getElementById("keys").innerHTML=types.map(t=>`<div class="krow">${KEYS[t].map(r=>{
     const id=t[0]+":"+r,s=store.keys[id],acc=s&&s.t?Math.round(s.c/s.t*100):null;
     const st=acc===null?"":`--heat:color-mix(in oklab,var(--ok) ${acc}%,var(--ng));--hp:${18+Math.min(s.t,10)*2}`;
