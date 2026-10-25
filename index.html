@@ -179,13 +179,12 @@ td.rt{color:var(--root);font-weight:600}
 svg .t-ink{fill:var(--ink)} svg .t-root{fill:var(--root)} svg .t-muted{fill:var(--muted)} svg .t-white{fill:#fff}
 svg .s-line{stroke:var(--line)} svg .s-ink{stroke:var(--ink)} svg .f-root{fill:var(--root)} svg .f-dot{fill:var(--dot);stroke:var(--dot-ring);stroke-width:1.5}
 svg .f-hl{fill:color-mix(in oklab,var(--root) var(--hl),var(--card))} svg .f-card{fill:var(--card)} svg .f-mark{fill:var(--line)}
-@media (max-width:420px){.hk-list{grid-template-columns:repeat(6,minmax(0,1fr))}}
-@media (max-width:420px){.seg{gap:6px}.seg>.seglab{width:3.5rem;letter-spacing:.02em}.seg button{font-size:.78rem;padding:6px 2px}.keyname{font-size:2.1rem}.choices.seven{grid-template-columns:repeat(3,minmax(0,1fr))}.krow{grid-template-columns:repeat(4,minmax(0,1fr))}}
-@media (max-width:380px){.tabs [role="tab"]{padding-inline:10px}.themebtn{padding-inline:9px}}
-@media (max-width:380px){.seg .opts[data-set="mode"]{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line)}.seg .opts[data-set="mode"] button{border-right:0;background:var(--card)}.seg .opts[data-set="mode"] button[aria-pressed="true"]{background:var(--sel-bg)}}
+@media (max-width:420px){.hk-list{grid-template-columns:repeat(6,minmax(0,1fr))}.seg{gap:6px}.seg>.seglab{width:3.5rem;letter-spacing:.02em}.seg button{font-size:.78rem;padding:6px 2px}.keyname{font-size:2.1rem}.choices.seven{grid-template-columns:repeat(3,minmax(0,1fr))}.krow{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media (max-width:380px){.tabs [role="tab"]{padding-inline:10px}.themebtn{padding-inline:9px}.seg .opts[data-set="mode"]{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line)}.seg .opts[data-set="mode"] button{border-right:0;background:var(--card)}.seg .opts[data-set="mode"] button[aria-pressed="true"]{background:var(--sel-bg)}}
 @media (prefers-reduced-motion:no-preference){.reveal{animation:in .18s ease-out}@keyframes in{from{opacity:.4;transform:translateY(4px)}to{opacity:1;transform:none}}}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}[hidden]{display:none!important}body{margin:0}
+.lt thead th button:disabled{cursor:default}
 </style>
-<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}[hidden]{display:none!important}body{margin:0}</style>
 </head>
 <body>
 <div class="wrap">
@@ -370,7 +369,7 @@ const keyId=(t,r)=>t[0]+":"+r;
 const activeScales=()=>S().scale==="both"?["major","minor"]:[S().scale];
 const off=new Set(store.off);
 function applyTheme(){const d=store.dark;document.documentElement.classList.toggle("dark",d);themeBtn.textContent=d?"ライト表示":"ダーク表示"} /* ラベルは押したときの動作を表す（状態を表す aria-pressed とは併用しない） */
-themeBtn.onclick=()=>{store.dark=!store.dark;save();applyTheme()};applyTheme();
+themeBtn.addEventListener("click",()=>{store.dark=!store.dark;save();applyTheme()});applyTheme();
 
 /* ---- question ---- */
 function pool(){const all=activeScales().flatMap(t=>KEYS[t].map(r=>({t,r,id:keyId(t,r)})));
@@ -398,7 +397,6 @@ function render(focusFirst=qBox.contains(document.activeElement)){
     <div class="prompt">${keyLabel(k.t,k.r)} キー ${q.text[0]} <span class="tok">${q.tok}</span> ${q.text[1]}</div>
     <div class="choices ${q.opts.length===7?"seven":""}">${q.opts.map((o,i)=>`<button id="opt${i}" data-v="${esc(o)}"><span class="k">${i+1}</span>${esc(o)}</button>`).join("")}</div>
     <div id="rv"></div>`;
-  qBox.querySelectorAll(".choices button").forEach(b=>b.onclick=()=>answer(b.dataset.v));
   if(focusFirst)$("opt0").focus({preventScroll:true});
   /* 読み上げは問題文と判定だけ（カード全体を live にすると選択肢まで毎回読み上げる） */
   qLive.textContent=`${keyLabel(k.t,k.r)} キー ${q.text[0]} ${q.tok} ${q.text[1]}`;
@@ -417,7 +415,7 @@ function answer(v){
     <div class="strip-scroll"><div class="strip">${q.ch.map(o=>`<div class="col ${o.i===q.i?"hit":""}">
       <div class="dot ${o.i===0?"r":""}">${NDEG[q.key.t][o.i]}</div><div class="nn">${fmt(q.notes[o.i])}</div><div class="cn">${o.name}</div><div class="dg">${o.deg}</div></div>`).join("")}</div></div>
     <button class="next" id="next">次の問題 →</button><div class="hint">Enter で次へ／数字キーで回答</div></div>`;
-  $("next").onclick=()=>render();$("next").focus({preventScroll:true});
+  $("next").focus({preventScroll:true});
   qLive.textContent=`${ok?"正解":"不正解。答えは "+q.ans}。${exp}`;
   renderStats();renderKeys();
 }
@@ -440,9 +438,12 @@ function renderKeys(){
     const st=acc===null?"":`--heat:color-mix(in oklab,var(--ok) ${acc}%,var(--ng));--hp:${18+Math.min(s.t,10)*2}`;
     const isCur=cur&&cur.key.id===id;
     return `<button class="chip ${isCur?"sel":""}" id="k-${t}-${r.replace("#","s")}" data-id="${id}" aria-pressed="${!off.has(id)}" style="${st}"><span class="kn">${keyLabel(t,r)}</span><span class="pc">${acc===null?"—":acc+"% · "+s.t}</span></button>`}).join("")}</div>`).join("");
-  document.querySelectorAll(".chip").forEach(b=>b.onclick=()=>{const id=b.dataset.id;off.has(id)?off.delete(id):off.add(id);store.off=[...off];save();
-    if(cur&&!cur.done&&off.has(cur.key.id))render();renderKeys()});
 }
+keysBox.addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;
+  const id=b.dataset.id;off.has(id)?off.delete(id):off.add(id);store.off=[...off];save();
+  if(cur&&!cur.done&&off.has(cur.key.id))render();renderKeys()});
+qBox.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
+  if(b.id==="next")render();else if(b.closest(".choices"))answer(b.dataset.v)});
 function renderRef(){
   const k=cur.key,t3=chordsOf(k.t,k.r,"triad"),t7=chordsOf(k.t,k.r,"seventh");
   refTbl.innerHTML=`<table><thead><tr><th>度数</th><th>音</th><th>三和音</th><th>四和音</th><th>構成音（四和音）</th></tr></thead><tbody>${t7.map((c,i)=>
@@ -452,13 +453,13 @@ function renderRef(){
 function syncSeg(){document.querySelectorAll(".opts").forEach(g=>g.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",S()[g.dataset.set]===b.dataset.v)))}
 document.querySelectorAll(".opts").forEach(g=>g.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
   S()[g.dataset.set]=b.dataset.v;save();syncSeg();render();renderKeys()}));
-kAll.onclick=()=>{off.clear();store.off=[];save();renderKeys()};
-kWeak.onclick=()=>{const ids=activeScales().flatMap(t=>KEYS[t].map(r=>keyId(t,r)));
+kAll.addEventListener("click",()=>{off.clear();store.off=[];save();renderKeys()});
+kWeak.addEventListener("click",()=>{const ids=activeScales().flatMap(t=>KEYS[t].map(r=>keyId(t,r)));
   const weak=ids.filter(id=>{const s=store.keys[id];return s&&s.t>=WEAK_MIN_TRIES&&s.c/s.t<WEAK_MAX_ACC});
   if(!weak.length){kWeak.textContent=`苦手なし（${WEAK_MIN_TRIES}問以上・${Math.round(WEAK_MAX_ACC*100)}%未満が対象）`;setTimeout(()=>kWeak.textContent="苦手だけ",FLASH_MS);return}
-  ids.forEach(id=>weak.includes(id)?off.delete(id):off.add(id));store.off=[...off];save();renderKeys();render()};
-let armed=false;kReset.onclick=()=>{if(!armed){armed=true;kReset.textContent="もう一度押すと消去";setTimeout(()=>{armed=false;kReset.textContent="記録リセット"},CONFIRM_MS);return}
-  armed=false;store.keys={};store.total=store.correct=store.best=0;streak=0;save();kReset.textContent="記録リセット";renderStats();renderKeys()};
+  ids.forEach(id=>weak.includes(id)?off.delete(id):off.add(id));store.off=[...off];save();renderKeys();render()});
+let armed=false;kReset.addEventListener("click",()=>{if(!armed){armed=true;kReset.textContent="もう一度押すと消去";setTimeout(()=>{armed=false;kReset.textContent="記録リセット"},CONFIRM_MS);return}
+  armed=false;store.keys={};store.total=store.correct=store.best=0;streak=0;save();kReset.textContent="記録リセット";renderStats();renderKeys()});
 
 /* ---- full list view ---- */
 let sel={r:null,i:0};
@@ -482,7 +483,7 @@ let hiddenInit=false; /* 全部めくった（hidden が空の）状態と、ま
 function hideAll(){hiddenInit=true;hidden.clear();listKeys().forEach(r=>{for(let i=0;i<7;i++)hidden.add(r+"|"+i)})}
 function renderList(){
   const t=L().scale,show=L().show,keys=listKeys(),hide=L().hide==="hide";
-  const head=show==="notes"?NDEG[t]:chordsOf(t,"C",show).map(c=>c.deg.replace(/^♭?[ⅠⅡⅢⅣⅤⅥⅦ]/,m=>m));
+  const head=show==="notes"?NDEG[t]:chordsOf(t,"C",show).map(c=>c.deg);
   lhint.textContent=hide?"マスをタップでめくり、めくったマスをもう一度タップで隠す。キー名で行ごと、度数で列ごと切替。":
     "マスをタップすると、上にそのコードの構成音（赤＝ルート、黒丸＝コード内の度数）を表示します。";
   const tk=show==="seventh"?"seventh":"triad";
@@ -494,7 +495,7 @@ function renderList(){
       const tn=L().tones==="on"&&show!=="notes"?`<small class="tn">${toneInfo(t,r,i,tk).map(x=>x.n).join(" ")}</small>`:"";
       const isSel=sel.r===r&&sel.i===i;
       return `<td class="${i===0?"i0":""} ${h?"hid":""} ${isSel&&!h?"sel":""}"><button data-cell="${r}|${i}" data-label="${esc(v)}" aria-label="${h?"隠れているマス":esc(v)}"><span>${esc(v)}${tn}</span></button></td>`}).join("")}</tr>`}).join("");
-  lt.innerHTML=`<thead><tr><th><button disabled style="cursor:default">キー</button></th>${head.map((h,i)=>`<th><button data-col="${i}">${h}</button></th>`).join("")}</tr></thead><tbody>${rows}</tbody>`;
+  lt.innerHTML=`<thead><tr><th><button disabled>キー</button></th>${head.map((h,i)=>`<th><button data-col="${i}">${h}</button></th>`).join("")}</tr></thead><tbody>${rows}</tbody>`;
   syncListSeg();renderDetail();
 }
 /* めくる・選ぶ操作では表を作り直さず、そのマスの見た目だけ更新する（フォーカスも保たれる） */
