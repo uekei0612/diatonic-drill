@@ -96,7 +96,9 @@ table{border-collapse:collapse;width:100%;font-family:var(--f-mono);font-size:.8
 th,td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
 th{font-family:var(--f-body);font-weight:500;font-size:.72rem;color:var(--muted);letter-spacing:.06em}
 td.rt{color:var(--root);font-weight:600}
-.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);align-items:center}
+.tabbar{display:flex;gap:4px;border-bottom:1px solid var(--line);align-items:center}
+.tabs{display:flex;gap:4px}
+.drill{display:flex;flex-direction:column;gap:20px}
 .themebtn{margin-left:auto;font:inherit;font-size:.75rem;background:none;border:1px solid var(--line);color:var(--muted);border-radius:99px;padding:3px 12px;cursor:pointer;margin-bottom:6px}
 .themebtn:focus-visible{outline:2px solid var(--root);outline-offset:2px}
 .tabs [role="tab"]{font:inherit;font-weight:700;background:none;border:0;border-bottom:3px solid transparent;color:var(--muted);padding:6px 14px;cursor:pointer;margin-bottom:-1px}
@@ -195,14 +197,16 @@ svg .f-hl{fill:color-mix(in oklab,var(--root) var(--hl),var(--card))} svg .f-car
     </div>
   </header>
 
-  <div class="tabs" role="tablist">
-    <button id="tab-drill" role="tab" aria-selected="true" data-view="drill">ドリル</button>
-    <button id="tab-list" role="tab" aria-selected="false" data-view="list">全一覧</button>
-    <button id="tab-help" role="tab" aria-selected="false" data-view="help">覚え方</button>
+  <div class="tabbar">
+    <div class="tabs" role="tablist" aria-label="表示の切り替え">
+      <button id="tab-drill" role="tab" aria-selected="true" aria-controls="drillView" tabindex="0" data-view="drill">ドリル</button>
+      <button id="tab-list" role="tab" aria-selected="false" aria-controls="listView" tabindex="-1" data-view="list">全一覧</button>
+      <button id="tab-help" role="tab" aria-selected="false" aria-controls="helpView" tabindex="-1" data-view="help">覚え方</button>
+    </div>
     <button class="themebtn" id="themeBtn" type="button"></button>
   </div>
 
-  <div class="list" id="listView" hidden>
+  <div class="list" id="listView" role="tabpanel" aria-labelledby="tab-list" hidden>
     <div class="settings">
       <div class="seg"><label>スケール</label><div class="opts" data-lset="scale">
         <button id="l-major" data-v="major">メジャー</button><button id="l-minor" data-v="minor">マイナー</button></div></div>
@@ -220,7 +224,7 @@ svg .f-hl{fill:color-mix(in oklab,var(--root) var(--hl),var(--card))} svg .f-car
     <div class="ltwrap"><table class="lt" id="lt"></table></div>
   </div>
 
-  <div class="help" id="helpView" hidden>
+  <div class="help" id="helpView" role="tabpanel" aria-labelledby="tab-help" hidden>
     <div class="hkeys">
       <span class="hk-label">例にするキー</span>
       <div class="hk-list" id="hkList"></div>
@@ -283,7 +287,7 @@ svg .f-hl{fill:color-mix(in oklab,var(--root) var(--hl),var(--card))} svg .f-car
     </section>
   </div>
 
-  <div id="drillView" style="display:contents">
+  <div class="drill" id="drillView" role="tabpanel" aria-labelledby="tab-drill">
   <div class="settings">
     <div class="seg"><label>出題</label><div class="opts" data-set="mode">
       <button id="m-mix" data-v="mix">ミックス</button><button id="m-d2c" data-v="d2c">度数→コード</button><button id="m-c2d" data-v="c2d">コード→度数</button><button id="m-note" data-v="note">構成音</button></div></div>
@@ -502,9 +506,15 @@ lt.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
 function syncListSeg(){document.querySelectorAll("[data-lset]").forEach(g=>g.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",L()[g.dataset.lset]===b.dataset.v)))}
 document.querySelectorAll("[data-lset]").forEach(g=>g.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
   const k=g.dataset.lset;L()[k]=b.dataset.v;if(L().hide==="hide"&&(k==="hide"||k==="scale"||k==="order"||k==="show"))hideAll();save();renderList()}));
-document.querySelectorAll('.tabs [role=tab]').forEach(b=>b.onclick=()=>{view=b.dataset.view;
-  document.querySelectorAll('.tabs [role=tab]').forEach(x=>x.setAttribute("aria-selected",x===b));
-  listView.hidden=view!=="list";drillView.hidden=view!=="drill";helpView.hidden=view!=="help";if(view==="help")renderHelp();if(view==="list"){if(L().hide==="hide"&&!hiddenInit)hideAll();renderList()}});
+const tabs=[...document.querySelectorAll('.tabs [role=tab]')];
+function selectTab(b){view=b.dataset.view;
+  tabs.forEach(x=>{x.setAttribute("aria-selected",x===b);x.tabIndex=x===b?0:-1});
+  listView.hidden=view!=="list";drillView.hidden=view!=="drill";helpView.hidden=view!=="help";if(view==="help")renderHelp();if(view==="list"){if(L().hide==="hide"&&!hiddenInit)hideAll();renderList()}}
+tabs.forEach(b=>b.addEventListener("click",()=>selectTab(b)));
+/* WAI-ARIA のタブパターン：左右の矢印・Home・End で移動して即切り替え */
+document.querySelector('.tabs').addEventListener("keydown",e=>{const i=tabs.indexOf(e.target);if(i<0)return;
+  const j={ArrowRight:i+1,ArrowLeft:i-1,Home:0,End:tabs.length-1}[e.key];if(j===undefined)return;
+  e.preventDefault();const t=tabs[(j+tabs.length)%tabs.length];selectTab(t);t.focus()});
 
 /* ---- help / cheat sheet ---- */
 let hKey="C";
