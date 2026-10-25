@@ -356,9 +356,30 @@ const KEYS=Object.fromEntries(Object.entries(FIFTHS).map(([t,ks])=>[t,
 const keyLabel=(t,r)=>fmt(r)+(t==="minor"?"m":"");
 
 /* ---- persistence ---- */
-const SK="diatonic-drill-v1";
-let store={keys:{},total:0,correct:0,best:0,settings:{mode:"mix",scale:"major",chord:"triad"},off:[]};
-try{const s=JSON.parse(localStorage.getItem(SK)||"null");if(s)store=Object.assign(store,s)}catch(e){}
+const SK="diatonic-drill-v1";  /* 既存の記録を引き継ぐため、キー名は変えない */
+const STORE_VERSION=1;
+const DEFAULTS={
+  settings:{mode:"mix",scale:"major",chord:"triad"},                           /* ドリル */
+  list:{scale:"major",show:"triad",order:"fifths",hide:"open",tones:"off"},   /* 全一覧 */
+};
+/* 選べる値は HTML のボタン（data-set / data-lset 内の data-v）が正本 */
+const choicesOf=(attr,name)=>[...document.querySelectorAll(`[${attr}="${name}"] button`)].map(b=>b.dataset.v);
+/* 保存データを項目ごとに読み、欠けた項目や想定外の値は初期値に戻す */
+function loadStore(){
+  let s=null;try{s=JSON.parse(localStorage.getItem(SK)||"null")}catch(e){}
+  if(!s||typeof s!=="object")s={};
+  /* version の無いデータは v1（この形式の最初の版）として読む。版を上げるときはここで旧形式を変換する */
+  const count=v=>Number.isInteger(v)&&v>=0?v:0;
+  const pick=(attr,saved,def)=>Object.fromEntries(Object.entries(def).map(([k,d])=>
+    [k,saved&&choicesOf(attr,k).includes(saved[k])?saved[k]:d]));
+  const keys={};
+  for(const [id,v] of Object.entries(s.keys&&typeof s.keys==="object"?s.keys:{}))
+    if(v&&count(v.t)===v.t&&count(v.c)===v.c&&v.c<=v.t)keys[id]={c:v.c,t:v.t};
+  return {version:STORE_VERSION,keys,total:count(s.total),correct:count(s.correct),best:count(s.best),
+    settings:pick("data-set",s.settings,DEFAULTS.settings),list:pick("data-lset",s.list,DEFAULTS.list),
+    off:Array.isArray(s.off)?s.off.filter(x=>typeof x==="string"):[],dark:s.dark===true};
+}
+const store=loadStore();
 const save=()=>{try{localStorage.setItem(SK,JSON.stringify(store))}catch(e){}};
 let streak=0,cur=null,lastSig="";
 const S=()=>store.settings;
@@ -366,8 +387,8 @@ const keyId=(t,r)=>t[0]+":"+r;
 /* ドリルの「スケール」設定で出題対象になるスケール */
 const activeScales=()=>S().scale==="both"?["major","minor"]:[S().scale];
 const off=new Set(store.off);
-function applyTheme(){const d=store.dark===true;document.documentElement.classList.toggle("dark",d);themeBtn.textContent=d?"白ベースに戻す":"ダーク表示";themeBtn.setAttribute("aria-pressed",d)}
-themeBtn.onclick=()=>{store.dark=!(store.dark===true);save();applyTheme()};applyTheme();
+function applyTheme(){const d=store.dark;document.documentElement.classList.toggle("dark",d);themeBtn.textContent=d?"白ベースに戻す":"ダーク表示";themeBtn.setAttribute("aria-pressed",d)}
+themeBtn.onclick=()=>{store.dark=!store.dark;save();applyTheme()};applyTheme();
 
 /* ---- question ---- */
 function pool(){const all=activeScales().flatMap(t=>KEYS[t].map(r=>({t,r,id:keyId(t,r)})));
@@ -464,7 +485,6 @@ let armed=false;kReset.onclick=()=>{if(!armed){armed=true;kReset.textContent="�
   armed=false;store.keys={};store.total=store.correct=store.best=0;streak=0;save();kReset.textContent="記録リセット";renderStats();renderKeys()};
 
 /* ---- full list view ---- */
-store.list=Object.assign({scale:"major",show:"triad",order:"fifths",hide:"open",tones:"off"},store.list||{});
 let sel={r:null,i:0};
 const TLAB={3:"♭3",4:"3",6:"♭5",7:"5",8:"♯5",9:"6",10:"♭7",11:"7"};
 function toneInfo(t,r,i,kind){const notes=spell(r,IV[t]),rp=pc(notes[i]);
