@@ -228,12 +228,7 @@ svg .f-hl{fill:color-mix(in oklab,var(--root) var(--hl),var(--card))} svg .f-car
 
     <section class="hcard">
       <h3><span class="hn">1</span>コードの並びは全キー共通</h3>
-      <div class="tbl"><table class="pat">
-        <thead><tr><th></th><th>Ⅰ</th><th>Ⅱ</th><th>Ⅲ</th><th>Ⅳ</th><th>Ⅴ</th><th>Ⅵ</th><th>Ⅶ</th></tr></thead>
-        <tbody>
-          <tr><th>三和音</th><td class="M">M</td><td class="m">m</td><td class="m">m</td><td class="M">M</td><td class="M">M</td><td class="m">m</td><td class="d">dim</td></tr>
-          <tr><th>四和音</th><td class="M">M7</td><td class="m">m7</td><td class="m">m7</td><td class="M">M7</td><td class="M">7</td><td class="m">m7</td><td class="d">m7(♭5)</td></tr>
-        </tbody></table></div>
+      <div class="tbl"><table class="pat" id="hPat"></table></div>
       <p class="say">「メジャー・マイナー・マイナー・メジャー・メジャー・マイナー・ディム」と唱えて覚える。</p>
       <p class="note"><b>マイナーキー</b>は平行調メジャーの Ⅵ から読み直すだけ：<span id="hMinor"></span></p>
       <div class="strip-scroll"><div class="strip" id="hStrip"></div></div>
@@ -267,12 +262,7 @@ svg .f-hl{fill:color-mix(in oklab,var(--root) var(--hl),var(--card))} svg .f-car
       <p class="note">6弦ルートから見た各度数の位置。キーが変わっても形は同じで、全体を平行移動するだけ。</p>
       <p class="note" id="hFbNote"></p>
       <div class="fb-scroll"><svg id="hFb" viewBox="0 0 440 210" role="img" aria-label="指板上の度数の位置"></svg></div>
-      <div class="tbl"><table class="pos"><tbody>
-        <tr><th>Ⅰ</th><td>6弦 x</td><th>Ⅴ</th><td>5弦 x+2</td></tr>
-        <tr><th>Ⅱm</th><td>6弦 x+2</td><th>Ⅵm</th><td>5弦 x+4　（6弦 x−3）</td></tr>
-        <tr><th>Ⅲm</th><td>6弦 x+4</td><th>Ⅶdim</th><td>5弦 x+6　（6弦 x−1）</td></tr>
-        <tr><th>Ⅳ</th><td>5弦 x</td><th></th><td></td></tr>
-      </tbody></table></div>
+      <div class="tbl"><table class="pos"><tbody id="hPos"></tbody></table></div>
     </section>
 
     <section class="hcard">
@@ -522,6 +512,18 @@ document.querySelectorAll('.tabs [role=tab]').forEach(b=>b.onclick=()=>{view=b.d
 
 /* ---- help / cheat sheet ---- */
 let hKey="C";
+/* 6弦ルート（x フレット）から見た各度数の位置。alt は 6弦で取る場合の別の位置 */
+const FB_POS=[{i:0,str:6,off:0},{i:1,str:6,off:2},{i:2,str:6,off:4},{i:3,str:5,off:0},{i:4,str:5,off:2},{i:5,str:5,off:4,alt:-3},{i:6,str:5,off:6,alt:-1}];
+const fret=d=>d===0?"x":d>0?"x+"+d:"x−"+(-d);
+/* キーに依らない表（コードの型・指板の位置）。C で計算して度数の部分だけ使う */
+function renderHelpTables(){
+  const cls=q=>/dim|♭5/.test(q)?"d":q[0]==="m"?"m":"M";
+  hPat.innerHTML=`<thead><tr><th></th>${ROMAN.map(r=>`<th>${r}</th>`).join("")}</tr></thead><tbody>${[["三和音","triad"],["四和音","seventh"]].map(([lab,kind])=>
+    `<tr><th>${lab}</th>${chordsOf("major","C",kind).map(c=>`<td class="${cls(c.q)}">${c.q||"M"}</td>`).join("")}</tr>`).join("")}</tbody>`;
+  const deg=chordsOf("major","C","triad").map(c=>c.deg),cell=p=>p?[`<th>${deg[p.i]}</th>`,`<td>${p.str}弦 ${fret(p.off)}${p.alt!==undefined?`　（6弦 ${fret(p.alt)}）`:""}</td>`]:["<th></th>","<td></td>"];
+  const left=FB_POS.slice(0,4),right=FB_POS.slice(4);
+  hPos.innerHTML=left.map((p,r)=>`<tr>${cell(p).join("")}${cell(right[r]).join("")}</tr>`).join("");
+}
 const SHARPS=["F","C","G","D","A","E","B"],FLATS=["B","E","A","D","G","C","F"];
 const SV=(t,a,c="")=>`<${t} ${Object.entries(a).map(([k,v])=>`${k}="${v}"`).join(" ")}>${c}</${t}>`;
 function renderHelp(){
@@ -577,15 +579,14 @@ function drawFb(){
   ["E","B","G","D","A","E"].forEach((nm,i)=>{s+=SV("line",{x1:lo===0?L+w:L,y1:sy(i+1),x2:R,y2:sy(i+1),class:"s-ink","stroke-width":0.6+i*0.3,opacity:.7});
     s+=SV("text",{x:L-16,y:sy(i+1)+4,"text-anchor":"middle","font-size":13,"font-family":"IBM Plex Mono,monospace",class:"t-muted"},(i+1)+"");});
   const ch=chordsOf("major",hKey,"triad");
-  const P=[[6,0,0],[6,2,1],[6,4,2],[5,0,3],[5,2,4],[5,4,5],[5,6,6]];
-  P.forEach(([str,off,i])=>{const f=x+off;if(f<lo||f>=lo+n)return;const cx=L+(f-lo+0.5)*w,cy=sy(str);
+  FB_POS.forEach(({str,off,i})=>{const f=x+off;if(f<lo||f>=lo+n)return;const cx=L+(f-lo+0.5)*w,cy=sy(str);
     s+=SV("circle",{cx,cy,r:17,class:i===0?"f-root":"f-dot"});
     s+=SV("text",{x:cx,y:cy+5,"text-anchor":"middle","font-size":ch[i].deg.length>2?11:14,"font-weight":700,class:"t-white"},ch[i].deg);});
   hFb.innerHTML=s;
 }
 hkList.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;hKey=b.dataset.k;renderHelp()});
 
-syncSeg();render();renderStats();renderKeys();
+syncSeg();render();renderStats();renderKeys();renderHelpTables();
 </script>
 </body>
 </html>
