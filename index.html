@@ -99,9 +99,9 @@ td.rt{color:var(--root);font-weight:600}
 .tabbar{display:flex;gap:4px;border-bottom:1px solid var(--line);align-items:center}
 .tabs{display:flex;gap:4px}
 .drill{display:flex;flex-direction:column;gap:20px}
-.themebtn{margin-left:auto;font:inherit;font-size:.75rem;background:none;border:1px solid var(--line);color:var(--muted);border-radius:99px;padding:3px 12px;cursor:pointer;margin-bottom:6px}
+.themebtn{margin-left:auto;white-space:nowrap;font:inherit;font-size:.75rem;background:none;border:1px solid var(--line);color:var(--muted);border-radius:99px;padding:3px 12px;cursor:pointer;margin-bottom:6px}
 .themebtn:focus-visible{outline:2px solid var(--root);outline-offset:2px}
-.tabs [role="tab"]{font:inherit;font-weight:700;background:none;border:0;border-bottom:3px solid transparent;color:var(--muted);padding:6px 14px;cursor:pointer;margin-bottom:-1px}
+.tabs [role="tab"]{white-space:nowrap;font:inherit;font-weight:700;background:none;border:0;border-bottom:3px solid transparent;color:var(--muted);padding:6px 14px;cursor:pointer;margin-bottom:-1px}
 .tabs [role="tab"][aria-selected="true"]{color:var(--ink);border-bottom-color:var(--root)}
 .tabs [role="tab"]:focus-visible,.lt th button:focus-visible,.lt td button:focus-visible{outline:2px solid var(--root);outline-offset:1px}
 .list{display:flex;flex-direction:column;gap:12px}
@@ -180,6 +180,7 @@ svg .s-line{stroke:var(--line)} svg .s-ink{stroke:var(--ink)} svg .f-root{fill:v
 svg .f-hl{fill:color-mix(in oklab,var(--root) var(--hl),var(--card))} svg .f-card{fill:var(--card)} svg .f-mark{fill:var(--line)}
 @media (max-width:420px){.hk-list{grid-template-columns:repeat(6,minmax(0,1fr))}}
 @media (max-width:420px){.seg{gap:6px}.seg>label{width:3.5rem;letter-spacing:.02em}.seg button{font-size:.78rem;padding:6px 2px}.keyname{font-size:2.1rem}.choices.seven{grid-template-columns:repeat(3,minmax(0,1fr))}.krow{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media (max-width:380px){.tabs [role="tab"]{padding-inline:10px}.themebtn{padding-inline:9px}}
 @media (max-width:380px){.seg .opts[data-set="mode"]{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line)}.seg .opts[data-set="mode"] button{border-right:0;background:var(--card)}.seg .opts[data-set="mode"] button[aria-pressed="true"]{background:var(--sel-bg)}}
 @media (prefers-reduced-motion:no-preference){.reveal{animation:in .18s ease-out}@keyframes in{from{opacity:.4;transform:translateY(4px)}to{opacity:1;transform:none}}}
 </style>
@@ -366,7 +367,7 @@ const keyId=(t,r)=>t[0]+":"+r;
 /* ドリルの「スケール」設定で出題対象になるスケール */
 const activeScales=()=>S().scale==="both"?["major","minor"]:[S().scale];
 const off=new Set(store.off);
-function applyTheme(){const d=store.dark;document.documentElement.classList.toggle("dark",d);themeBtn.textContent=d?"白ベースに戻す":"ダーク表示";themeBtn.setAttribute("aria-pressed",d)}
+function applyTheme(){const d=store.dark;document.documentElement.classList.toggle("dark",d);themeBtn.textContent=d?"ライト表示":"ダーク表示"} /* ラベルは押したときの動作を表す（状態を表す aria-pressed とは併用しない） */
 themeBtn.onclick=()=>{store.dark=!store.dark;save();applyTheme()};applyTheme();
 
 /* ---- question ---- */
