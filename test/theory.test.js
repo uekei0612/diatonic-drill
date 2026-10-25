@@ -26,7 +26,10 @@ test("全キーのスケールは 7 つの音名を 1 回ずつ使い、ダブ�
   for (const { t, r } of ALL_KEYS) {
     const notes = T.spell(r, T.IV[t]);
     assert.equal(new Set(notes.map(n => n[0])).size, 7, `${t} ${r}: ${notes}`);
-    assert.ok(notes.every(n => !/##|bb/.test(n)), `${t} ${r}: ${notes}`);
+    assert.ok(
+      notes.every(n => !/##|bb/.test(n)),
+      `${t} ${r}: ${notes}`,
+    );
     assert.equal(notes[0], r);
   }
 });
@@ -56,28 +59,43 @@ const DEG = {
 };
 
 test("コードの型と度数表記は全キー共通", () => {
-  for (const { t, r } of ALL_KEYS) for (const kind of ["triad", "seventh"]) {
-    const ch = T.chordsOf(t, r, kind);
-    assert.deepEqual(ch.map(c => c.q), QUALITY[t][kind], `${t} ${r} ${kind}`);
-    assert.deepEqual(ch.map(c => c.deg), DEG[t].map((d, i) => d + QUALITY[t][kind][i]), `${t} ${r} ${kind}`);
-  }
+  for (const { t, r } of ALL_KEYS)
+    for (const kind of ["triad", "seventh"]) {
+      const ch = T.chordsOf(t, r, kind);
+      assert.deepEqual(
+        ch.map(c => c.q),
+        QUALITY[t][kind],
+        `${t} ${r} ${kind}`,
+      );
+      assert.deepEqual(
+        ch.map(c => c.deg),
+        DEG[t].map((d, i) => d + QUALITY[t][kind][i]),
+        `${t} ${r} ${kind}`,
+      );
+    }
 });
 
 test("構成音の例", () => {
   assert.deepEqual(T.chordsOf("major", "C", "seventh")[4].tones, ["G", "B", "D", "F"]);
   assert.equal(T.chordsOf("major", "F#", "triad")[6].name, "E♯dim");
   assert.equal(T.chordsOf("minor", "A", "triad")[2].name, "C");
-  assert.deepEqual(T.toneInfo("major", "C", 6, "seventh").map(x => x.lab), ["R", "♭3", "♭5", "♭7"]);
+  assert.deepEqual(
+    T.toneInfo("major", "C", 6, "seventh").map(x => x.lab),
+    ["R", "♭3", "♭5", "♭7"],
+  );
 });
 
 test("出題：どのキー・形式でも選択肢は重複せず、正解を含む", () => {
   const modes = { d2c: 4, c2d: 7, note: 4 };
-  for (let n = 0; n < 50; n++) for (const k of ALL_KEYS) for (const [mode, len] of Object.entries(modes)) for (const kind of ["triad", "seventh"]) {
-    const q = T.buildQuestion(k, mode, kind);
-    const where = `${k.id} ${mode} ${kind}`;
-    assert.equal(q.opts.length, len, where);
-    assert.equal(new Set(q.opts).size, q.opts.length, `${where}: ${q.opts}`);
-    assert.ok(q.opts.includes(q.ans), `${where}: ${q.ans} / ${q.opts}`);
-    if (mode === "note") assert.ok(q.i >= 1 && q.i <= 6, where);
-  }
+  for (let n = 0; n < 50; n++)
+    for (const k of ALL_KEYS)
+      for (const [mode, len] of Object.entries(modes))
+        for (const kind of ["triad", "seventh"]) {
+          const q = T.buildQuestion(k, mode, kind);
+          const where = `${k.id} ${mode} ${kind}`;
+          assert.equal(q.opts.length, len, where);
+          assert.equal(new Set(q.opts).size, q.opts.length, `${where}: ${q.opts}`);
+          assert.ok(q.opts.includes(q.ans), `${where}: ${q.ans} / ${q.opts}`);
+          if (mode === "note") assert.ok(q.i >= 1 && q.i <= 6, where);
+        }
 });

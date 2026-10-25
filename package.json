@@ -3,6 +3,7 @@
   "private": true,
   "description": "ダイアトニックコードのドリル（静的ページ。package.json はテスト用）",
   "scripts": {
-    "test": "node --test test/"
+    "test": "node --test test/",
+    "format": "npx prettier@3 --write index.html theory.js test/"
   }
 }
