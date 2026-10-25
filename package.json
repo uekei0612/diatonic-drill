@@ -1,0 +1,8 @@
+{
+  "name": "diatonic-drill",
+  "private": true,
+  "description": "ダイアトニックコードのドリル（静的ページ。package.json はテスト用）",
+  "scripts": {
+    "test": "node --test test/"
+  }
+}
