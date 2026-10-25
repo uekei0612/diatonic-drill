@@ -311,7 +311,10 @@ const LET="CDEFGAB", LPC=[0,2,4,5,7,9,11];
 const IV={major:[0,2,4,5,7,9,11],minor:[0,2,3,5,7,8,10]};
 const ROMAN=["Ⅰ","Ⅱ","Ⅲ","Ⅳ","Ⅴ","Ⅵ","Ⅶ"];
 const NDEG={major:["R","2","3","4","5","6","7"],minor:["R","2","♭3","4","5","♭6","♭7"]};
-const KEYS={major:["C","G","D","A","E","B","F#","F","Bb","Eb","Ab","Db"],minor:["A","E","B","F#","C#","G#","D","G","C","F","Bb","Eb"]};
+/* 扱うキーはこの五度圏の並びが正本。同じ位置のメジャーとマイナーは平行調（F♯ と E♭m は異名同音で揃えている） */
+const FIFTHS={major:["C","G","D","A","E","B","F#","Db","Ab","Eb","Bb","F"],minor:["A","E","B","F#","C#","G#","Eb","Bb","F","C","G","D"]};
+const PROGRESSIONS=[ /* [名前, 度数の並び（0 = Ⅰ）, 三和音か四和音か] */
+  ["王道進行",[3,4,2,5],"seventh"],["カノン進行",[0,4,5,2,3,0,3,4],"triad"],["Ⅱ-Ⅴ-Ⅰ",[1,4,0],"seventh"],["小室進行",[5,3,4,0],"triad"]];
 const QT={triad:["","m","dim"],seventh:["M7","7","m7","m7(♭5)"]};
 const QLABEL={d2c:"度数→コード",c2d:"コード→度数",note:"構成音"};
 
@@ -345,6 +348,11 @@ function chordsOf(type,root,kind){
 }
 function alter(n){const p=parse(n);let ds=[1,-1].filter(d=>Math.abs(p.a+d)<=1);if(!ds.length)ds=[1,-1];return LET[p.l]+accStr(p.a+rnd(ds))}
 function enh(n){const p=parse(n),v=pc(n);for(const dl of shuffle([1,-1])){const l=(p.l+dl+7)%7;let d=((v-LPC[l])%12+12)%12;if(d>6)d-=12;if(Math.abs(d)<=1)return LET[l]+accStr(d)}return null}
+/* 調号の数（♯は正、♭は負） */
+const keySig=(t,r)=>spell(r,IV[t]).reduce((a,n)=>a+parse(n).a,0);
+/* ♯系（調号なしを含む）を ♯の少ない順に、続けて♭系を ♭の少ない順に */
+const KEYS=Object.fromEntries(Object.entries(FIFTHS).map(([t,ks])=>[t,
+  [...ks.filter(r=>keySig(t,r)>=0),...ks.filter(r=>keySig(t,r)<0).sort((a,b)=>keySig(t,b)-keySig(t,a))]]));
 const keyLabel=(t,r)=>fmt(r)+(t==="minor"?"m":"");
 
 /* ---- persistence ---- */
@@ -455,7 +463,6 @@ let armed=false;kReset.onclick=()=>{if(!armed){armed=true;kReset.textContent="�
   armed=false;store.keys={};store.total=store.correct=store.best=0;streak=0;save();kReset.textContent="記録リセット";renderStats();renderKeys()};
 
 /* ---- full list view ---- */
-const FIFTHS={major:["C","G","D","A","E","B","F#","Db","Ab","Eb","Bb","F"],minor:["A","E","B","F#","C#","G#","Eb","Bb","F","C","G","D"]};
 store.list=Object.assign({scale:"major",show:"triad",order:"fifths",hide:"open",tones:"off"},store.list||{});
 let sel={r:null,i:0};
 const TLAB={3:"♭3",4:"3",6:"♭5",7:"5",8:"♯5",9:"6",10:"♭7",11:"7"};
@@ -532,14 +539,13 @@ function renderHelp(){
   hStrip.innerHTML=t3.map((c,i)=>`<div class="col"><div class="dot ${i===0?"r":""}">${NDEG.major[i]}</div><div class="nn">${fmt(notes[i])}</div><div class="cn">${c.name}<br>${t7[i].name}</div><div class="dg">${c.deg}</div></div>`).join("");
   const rel=notes[5],mc=chordsOf("minor",rel,"triad");
   hMinor.innerHTML=` <b>${fmt(rel)}m キー</b> ＝ ${mc.map(c=>c.name).join("・")}`;
-  const sigN=notes.reduce((a,n)=>a+parse(n).a,0);
+  const sigN=keySig("major",hKey);
   hSharp.innerHTML=SHARPS.map((n,i)=>`<span class="${sigN>0&&i<sigN?"on":""}">${n}</span>`).join("");
   hFlat.innerHTML=FLATS.map((n,i)=>`<span class="${sigN<0&&i<-sigN?"on":""}">${n}</span>`).join("");
   hSig.innerHTML=sigN===0?`<b>${fmt(hKey)} キー</b>は調号なし：${notes.map(fmt).join(" ")}`:
     `<b>${fmt(hKey)} キー</b>は ${sigN>0?"♯":"♭"}×${Math.abs(sigN)}：${notes.map(fmt).join(" ")}`;
   drawCof();drawFb();{const x=(pc(hKey)-4+12)%12;hFbNote.innerHTML=`<b>${fmt(hKey)} キー</b>は x = ${x===0?"0（開放）":x} フレット：${t3.map(c=>c.deg+" "+c.name).join("　")}`;}
-  const P=[["王道進行",[3,4,2,5],"seventh"],["カノン進行",[0,4,5,2,3,0,3,4],"triad"],["Ⅱ-Ⅴ-Ⅰ",[1,4,0],"seventh"],["小室進行",[5,3,4,0],"triad"]];
-  hProg.innerHTML=P.map(([n,seq,k])=>{const ch=chordsOf("major",hKey,k);
+  hProg.innerHTML=PROGRESSIONS.map(([n,seq,k])=>{const ch=chordsOf("major",hKey,k);
     return `<div class="prow"><span class="pl">${n}</span><span class="pd">${seq.map(i=>ch[i].deg).join(" - ")}</span><span class="pc2">${seq.map(i=>ch[i].name).join(" - ")}</span></div>`}).join("");
 }
 function drawCof(){
